@@ -1,5 +1,4 @@
-// --- STATE & ACCOUNT VARIABLES ---
-let currentUser = null;
+// --- STATE VARIABLES ---
 let currentStudyIndex = 0;
 let currentFlashcardIndex = 0;
 let quizQuestions = [];
@@ -7,70 +6,19 @@ let currentQuizIndex = 0;
 let score = 0;
 let isHardQuiz = false;
 
-// --- ACCOUNT SYSTEM (LOCAL STORAGE) ---
+// --- INSTANT LOAD (LOCAL STORAGE) ---
 window.onload = function() {
-    const savedUser = localStorage.getItem('loggedInUser');
-    if (savedUser) {
-        currentUser = savedUser;
-        loadUserData();
-        showScreen('home-screen');
-    }
+    loadUserData();
 };
 
-function handleLogin() {
-    const userInp = document.getElementById('username-input').value.trim();
-    const passInp = document.getElementById('password-input').value.trim();
-    const errorMsg = document.getElementById('login-error');
-
-    if (!userInp || !passInp) {
-        errorMsg.innerText = "Please enter both name and password.";
-        errorMsg.style.display = 'block';
-        return;
-    }
-
-    const storedPass = localStorage.getItem(`user_${userInp}_pass`);
-    
-    if (storedPass) {
-        if (storedPass === passInp) {
-            currentUser = userInp;
-            localStorage.setItem('loggedInUser', currentUser);
-            loadUserData();
-            showScreen('home-screen');
-        } else {
-            errorMsg.innerText = "Incorrect password.";
-            errorMsg.style.display = 'block';
-        }
-    } else {
-        localStorage.setItem(`user_${userInp}_pass`, passInp);
-        localStorage.setItem(`user_${userInp}_studyIndex`, 0);
-        localStorage.setItem(`user_${userInp}_flashcardIndex`, 0);
-        localStorage.setItem(`user_${userInp}_totalQuestions`, 0);
-        localStorage.setItem(`user_${userInp}_correctAnswers`, 0);
-        
-        currentUser = userInp;
-        localStorage.setItem('loggedInUser', currentUser);
-        loadUserData();
-        showScreen('home-screen');
-    }
-}
-
-function logout() {
-    currentUser = null;
-    localStorage.removeItem('loggedInUser');
-    document.getElementById('username-input').value = '';
-    document.getElementById('password-input').value = '';
-    document.getElementById('login-error').style.display = 'none';
-    showScreen('login-screen');
-}
-
 function loadUserData() {
-    document.getElementById('welcome-text').innerText = `Welcome, ${currentUser}!`;
+    // Load saved indexes directly from device
+    currentStudyIndex = parseInt(localStorage.getItem(`civics_studyIndex`)) || 0;
+    currentFlashcardIndex = parseInt(localStorage.getItem(`civics_flashcardIndex`)) || 0;
     
-    currentStudyIndex = parseInt(localStorage.getItem(`user_${currentUser}_studyIndex`)) || 0;
-    currentFlashcardIndex = parseInt(localStorage.getItem(`user_${currentUser}_flashcardIndex`)) || 0;
-    
-    const totalQ = parseInt(localStorage.getItem(`user_${currentUser}_totalQuestions`)) || 0;
-    const correctA = parseInt(localStorage.getItem(`user_${currentUser}_correctAnswers`)) || 0;
+    // Calculate Mastery
+    const totalQ = parseInt(localStorage.getItem(`civics_totalQuestions`)) || 0;
+    const correctA = parseInt(localStorage.getItem(`civics_correctAnswers`)) || 0;
     
     let masteryPercent = 0;
     if (totalQ > 0) {
@@ -78,29 +26,34 @@ function loadUserData() {
     }
     
     document.getElementById('mastery-percentage').innerText = `${masteryPercent}%`;
-    document.querySelector('.mastery-circle').style.background = `conic-gradient(#28a745 ${masteryPercent}%, #174ea6 ${masteryPercent}%)`;
     
-    if (totalQ === 0) document.getElementById('resume-text').innerText = "Take a quiz to see your mastery!";
-    else if (masteryPercent >= 90) document.getElementById('resume-text').innerText = "Outstanding! You are ready.";
-    else if (masteryPercent >= 70) document.getElementById('resume-text').innerText = "Doing great. Keep studying!";
-    else document.getElementById('resume-text').innerText = "Keep practicing, you'll get it!";
+    // MATHEMATICALLY CALCULATE COLOR: 0% = Red (0 hue), 100% = Green (120 hue)
+    let hue = Math.round((masteryPercent / 100) * 120); 
+    let progressColor = `hsl(${hue}, 80%, 45%)`; 
+    
+    // Update the ring's stroke size based on percentage
+    let ringDegrees = masteryPercent * 3.6; // 100% = 360 degrees
+    document.getElementById('progress-circle').style.background = `conic-gradient(${progressColor} ${ringDegrees}deg, rgba(0,0,0,0.1) 0deg)`;
+    
+    // Update status text
+    let resumeText = document.getElementById('resume-text');
+    if (totalQ === 0) resumeText.innerText = "Take a quiz to see your mastery!";
+    else if (masteryPercent >= 90) resumeText.innerText = "Outstanding! You are ready.";
+    else if (masteryPercent >= 70) resumeText.innerText = "Doing great. Keep studying!";
+    else resumeText.innerText = "Keep practicing, you'll get it!";
 }
 
 function saveProgress(type, index) {
-    if (currentUser) {
-        localStorage.setItem(`user_${currentUser}_${type}Index`, index);
-    }
+    localStorage.setItem(`civics_${type}Index`, index);
 }
 
 function updateMastery(newTotal, newCorrect) {
-    if (currentUser) {
-        let currentTotal = parseInt(localStorage.getItem(`user_${currentUser}_totalQuestions`)) || 0;
-        let currentCorrect = parseInt(localStorage.getItem(`user_${currentUser}_correctAnswers`)) || 0;
-        
-        localStorage.setItem(`user_${currentUser}_totalQuestions`, currentTotal + newTotal);
-        localStorage.setItem(`user_${currentUser}_correctAnswers`, currentCorrect + newCorrect);
-        loadUserData(); 
-    }
+    let currentTotal = parseInt(localStorage.getItem(`civics_totalQuestions`)) || 0;
+    let currentCorrect = parseInt(localStorage.getItem(`civics_correctAnswers`)) || 0;
+    
+    localStorage.setItem(`civics_totalQuestions`, currentTotal + newTotal);
+    localStorage.setItem(`civics_correctAnswers`, currentCorrect + newCorrect);
+    loadUserData(); // Refresh the dynamic ring
 }
 
 // --- AUDIO (Subtle Click & AI Voice) ---
@@ -127,7 +80,7 @@ function speakQuestion(text) {
     synth.cancel(); 
     setTimeout(() => {
         const utterThis = new SpeechSynthesisUtterance(text);
-        utterThis.rate = 1.05; // Voice speed increased to 1.5 as requested!
+        utterThis.rate = 1.05; // Perfect talking speed
         const voices = synth.getVoices();
         const betterVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || (v.lang === 'en-US' && v.name.includes('Female')));
         if (betterVoice) utterThis.voice = betterVoice;
@@ -171,8 +124,6 @@ function toggleMicrophone() {
     synth.cancel(); 
     try { recognition.start(); } catch (e) { recognition.stop(); }
 }
-
-// Forces the microphone button to turn back to default Red
 function stopMicrophoneUI() {
     document.getElementById('mic-btn').classList.remove('recording');
     document.getElementById('mic-btn').innerText = "🎤 Tap to Speak";
@@ -187,22 +138,16 @@ function shuffleArray(array) {
     return array;
 }
 function cleanText(text) { return text.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
-
-// ** FIXED QUOTATION MARK BUG HERE **
 function normalizeForComparison(text) { 
-    // Strips out all punctuation, including “ ” " ' so "Father of the Constitution" works perfectly!
     return cleanText(text).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, "").trim(); 
 }
 
 function isForgivingMatch(userInput, officialAnswers) {
     const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
     const cleanInput = normalizeForComparison(userInput);
-    const inputWords = cleanInput.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
 
     for (let ans of officialAnswers) {
         const cleanAns = normalizeForComparison(ans);
-        
-        // Super forgiving: If they say the whole answer inside a sentence, mark it right instantly
         if (cleanInput.includes(cleanAns) || (cleanAns.includes(cleanInput) && cleanInput.length > 4)) return true;
 
         const ansWords = cleanAns.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
@@ -333,7 +278,6 @@ function renderHardQuizQuestion() {
 }
 
 function checkHardAnswer() {
-    // FORCE STOP LISTENING AND RESET BUTTON COLOR IMMEDIATELY
     if(recognition) { try { recognition.stop(); } catch(e){} }
     stopMicrophoneUI();
 
