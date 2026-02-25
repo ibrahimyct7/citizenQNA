@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>US Civics Study App</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ce1126">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -15,14 +14,12 @@
     <div id="home-screen" class="screen active">
         <div class="stars">★ ★ ★</div>
         <h1 class="title">Dashboard</h1>
-        
         <div class="mastery-container">
             <div class="circular-progress" id="progress-circle">
                 <span id="mastery-percentage" class="circular-progress-value">0%</span>
             </div>
             <p id="resume-text" class="status-text">Take a quiz to see your mastery!</p>
         </div>
-
         <div class="button-group">
             <button onclick="startStudy()">Study Mode</button>
             <button onclick="startFlashcards()">Flashcards</button>
@@ -84,14 +81,12 @@
         <h2 id="hard-quiz-progress-text" class="progress-text">Question 1 of 20</h2>
         <div class="progress-bar-container"><div id="hard-quiz-progress-bar" class="progress-bar"></div></div>
         <h1 id="hard-quiz-question" class="question-text">Question?</h1>
-        
         <div class="voice-container">
             <button id="mic-btn" class="mic-button" onclick="toggleMicrophone()">🎤 Tap to Speak</button>
             <p id="mic-status" class="mic-status"></p>
             <input type="text" id="hard-quiz-input" class="hard-input" placeholder="Type or say your answer" />
             <p id="hard-quiz-feedback" class="feedback-text"></p>
         </div>
-
         <div class="button-group">
             <button id="hard-quiz-check-btn" onclick="checkHardAnswer()">Check Answer</button>
             <button id="hard-quiz-next-btn" onclick="nextHardQuizQuestion()" style="display:none;">Next</button>
@@ -103,14 +98,13 @@
         <div class="stars center-stars">★ ★ ★</div>
         <h1 class="title">Quiz Complete</h1>
         <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
-        <button onclick="goHome()" style="max-width:300px;">Back to Home Dashboard</button>
+        <button onclick="goHome()" style="max-width:320px;">Back to Home Dashboard</button>
     </div>
 
     <div id="confirmation-modal" class="modal">
         <div class="modal-content">
             <h2 style="color: #0a3161; margin:0;">Are you sure?</h2>
-            <p style="color: #333333; margin: 15px 0;">Current progress will be lost.</p>
-            <button onclick="cancelEndQuiz()">No</button>
+            <button onclick="cancelEndQuiz()" style="margin-top:20px;">No</button>
             <button onclick="confirmEndQuiz()" class="btn-danger" style="margin-top:10px;">Yes, End</button>
         </div>
     </div>
