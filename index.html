@@ -4,19 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>US Civics Study App</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ce1126">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="home-screen" class="screen center-content active">
+    <div id="login-screen" class="screen center-content active">
         <div class="stars">★ ★ ★</div>
         <h1 class="title">US Civics Study App</h1>
+        <p class="progress-text" style="color: #ffffff; margin-bottom: 30px;">Login or create a new local account to save your progress.</p>
+        
+        <div class="login-box">
+            <input type="text" id="username-input" class="auth-input" placeholder="Enter your name" autocomplete="off">
+            <input type="password" id="password-input" class="auth-input" placeholder="Create or enter password">
+            <button onclick="handleLogin()" style="width: 100%; margin-top: 10px;">Login / Start</button>
+            <p id="login-error" class="feedback-incorrect" style="display: none; font-size: 18px; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <div id="home-screen" class="screen center-content">
+        <div class="stars">★ ★ ★</div>
+        <h1 class="title">Dashboard</h1>
+        
+        <div class="progress-card">
+            <h2 id="welcome-text" style="margin-top: 0; color: #0a3161;">Welcome!</h2>
+            <div class="mastery-circle">
+                <span id="mastery-percentage">0%</span>
+            </div>
+            <p style="color: #333333; font-weight: bold; margin-bottom: 0;">Civics Mastery</p>
+            <p id="resume-text" style="color: #666; font-size: 16px; margin-top: 5px;">Ready to learn.</p>
+        </div>
+
         <div class="button-group home-buttons">
             <button onclick="startStudy()">Study Mode</button>
             <button onclick="startFlashcards()">Flashcards</button>
             <button onclick="startQuiz()">Standard Quiz</button>
             <button onclick="startHardQuiz()" class="btn-hard">Hard Quiz (Voice)</button>
         </div>
+        <button onclick="logout()" class="btn-secondary" style="margin-top: 40px; font-size: 16px; padding: 10px 20px;">Log Out</button>
     </div>
 
     <div id="study-screen" class="screen">
@@ -119,5 +148,15 @@
 
     <script src="questions.js"></script>
     <script src="script.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered!', reg))
+                    .catch(err => console.error('Service Worker Failed', err));
+            });
+        }
+    </script>
 </body>
 </html>
