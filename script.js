@@ -8,11 +8,16 @@ function loadUserData() {
     currentFlashcardIndex = parseInt(localStorage.getItem(`civ_flashcardIndex`)) || 0;
     const totalQ = parseInt(localStorage.getItem(`civ_totalQ`)) || 0, correctA = parseInt(localStorage.getItem(`civ_correctA`)) || 0;
     let mastery = totalQ > 0 ? Math.round((correctA / totalQ) * 100) : 0;
+    
     document.getElementById('mastery-percentage').innerText = mastery + "%";
+    
+    let degrees = mastery * 3.6;
     let hue = Math.round((mastery / 100) * 120); 
-    document.getElementById('progress-circle').style.background = `conic-gradient(hsl(${hue}, 80%, 45%) ${mastery * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    let activeColor = `hsl(${hue}, 80%, 50%)`;
+    document.getElementById('progress-circle').style.background = `conic-gradient(${activeColor} ${degrees}deg, rgba(255,255,255,0.1) ${degrees}deg)`;
+    
     let rt = document.getElementById('resume-text');
-    rt.innerText = totalQ === 0 ? "Take a quiz to see your mastery!" : mastery >= 90 ? "You are ready!" : "Keep studying!";
+    rt.innerText = totalQ === 0 ? "Take a quiz to see your mastery!" : mastery >= 90 ? "Excellent Mastery!" : "Keep Practicing!";
 }
 
 function updateMastery(q, c) {
@@ -25,7 +30,7 @@ function speakQuestion(text) {
     synth.cancel();
     setTimeout(() => {
         const u = new SpeechSynthesisUtterance(text);
-        u.rate = 1.05;
+        u.rate = 1.08;
         const v = synth.getVoices();
         u.voice = v.find(n => n.name.includes('Google') || n.name.includes('Samantha')) || v[0];
         synth.speak(u);
@@ -36,12 +41,13 @@ function cleanText(t) { return t.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
 function norm(t) { return cleanText(t).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, "").trim(); }
 
 function isMatch(inp, ansList) {
-    const stop = ['the', 'a', 'it', 'is', 'of', 'for', 'in', 'that', 'from', 'because', 'they', 'have'];
+    const stop = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
     const cleanInp = norm(inp);
     for (let a of ansList) {
         const cleanA = norm(a);
         if (cleanInp.includes(cleanA) || (cleanA.includes(cleanInp) && cleanInp.length > 4)) return true;
         const words = cleanA.split(' ').filter(w => !stop.includes(w) && w.length > 1);
+        if (words.length === 0) continue;
         let m = 0;
         words.forEach(w => { if (cleanInp.includes(w)) m++; });
         if (words.length <= 2 ? m === words.length : m / words.length >= 0.5) return true;
@@ -53,6 +59,7 @@ function showScreen(id) {
     synth.cancel();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
 }
 
 function goHome() { showScreen('home-screen'); loadUserData(); }
@@ -109,7 +116,7 @@ function nextQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) ren
 function startHardQuiz() { quizQuestions = [...civicsData].sort(() => 0.5 - Math.random()).slice(0, 20); currentQuizIndex = 0; score = 0; renderHard(); showScreen('hard-quiz-screen'); }
 function renderHard() {
     const q = quizQuestions[currentQuizIndex];
-    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex+1} of 20`;
+    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 20`;
     document.getElementById('hard-quiz-progress-bar').style.width = (currentQuizIndex / 20 * 100) + "%";
     document.getElementById('hard-quiz-question').innerText = cleanText(q.question);
     speakQuestion(cleanText(q.question));
@@ -119,6 +126,7 @@ function renderHard() {
     document.getElementById('hard-quiz-next-btn').style.display = 'none';
 }
 function checkHardAnswer() {
+    if(rec) { try { rec.stop(); } catch(e){} }
     const inp = document.getElementById('hard-quiz-input').value;
     const q = quizQuestions[currentQuizIndex];
     if (isMatch(inp, q.answers)) { score++; document.getElementById('hard-quiz-feedback').innerText = "✅ Correct!"; }
