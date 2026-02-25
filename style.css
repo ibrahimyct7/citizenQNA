@@ -16,7 +16,7 @@ body, html {
     flex-direction: column;
     justify-content: center;
     min-height: 100vh;
-    padding: 0 12%;
+    padding: 5% 12%;
     box-sizing: border-box;
     animation: fadeIn 0.4s ease-in-out;
 }
@@ -34,18 +34,18 @@ body, html {
 .title { font-size: 64px; font-weight: bold; margin-bottom: 40px; }
 .progress-text { font-size: 24px; color: #a9b4c2; margin-bottom: 10px; font-weight: normal; }
 .question-text { font-size: 36px; margin-bottom: 40px; line-height: 1.3; }
-.score-text { font-size: 42px; margin-bottom: 40px; color: #ffd60a; }
+.score-text { font-size: 42px; margin-bottom: 40px; color: #ffb703; }
 
 /* BUTTONS */
 .button-group { 
     display: flex; 
     gap: 20px; 
     margin-top: 40px; 
-    flex-wrap: wrap; /* Allows buttons to stack nicely if screen is small */
+    flex-wrap: wrap; 
 }
 
 button {
-    background-color: #ffd60a;
+    background-color: #ffb703; /* Richer, darker Gold */
     color: #000000;
     font-size: 22px;
     font-weight: bold;
@@ -58,7 +58,7 @@ button {
 
 button:hover:not(:disabled) {
     transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(255, 214, 10, 0.3);
+    box-shadow: 0 6px 15px rgba(255, 183, 3, 0.4);
 }
 
 button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -69,8 +69,30 @@ button.btn-secondary {
     border: 2px solid #ffffff;
 }
 
-/* STUDY MODE LIST */
-.answer-list { font-size: 24px; line-height: 1.6; color: #e0e1dd; }
+button.btn-secondary:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 15px rgba(255, 255, 255, 0.2);
+}
+
+/* STUDY MODE LIST (EYE-CATCHING CARDS) */
+.answer-list { 
+    list-style: none; /* Removes basic dots */
+    padding: 0;
+    margin: 0 0 40px 0;
+    width: 100%;
+}
+
+.answer-list li {
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle white box */
+    border-left: 6px solid #ffb703; /* Gold accent line */
+    padding: 18px 24px;
+    margin-bottom: 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 26px;
+    font-weight: 500;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
 
 /* QUIZ MODE CARDS */
 .options-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
@@ -104,7 +126,7 @@ button.btn-secondary {
 
 .progress-bar {
     height: 100%;
-    background-color: #ffd60a;
+    background-color: #ffb703;
     width: 0%;
     transition: width 0.4s ease;
 }
@@ -114,7 +136,8 @@ button.btn-secondary {
     .screen { padding: 8% 5%; }
     .title { font-size: 42px; }
     .question-text { font-size: 28px; }
+    .answer-list li { font-size: 20px; padding: 14px 18px; }
     .answer-card { font-size: 18px; padding: 16px; }
-    .button-group { flex-direction: column; width: 100%; }
-    button { width: 100%; } /* Forces buttons to be full-width and stacked */
+    .button-group { flex-direction: column; width: 100%; gap: 12px; }
+    button { width: 100%; }
 }
