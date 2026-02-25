@@ -1,331 +1,144 @@
-// --- STATE VARIABLES ---
-let currentStudyIndex = 0;
-let currentFlashcardIndex = 0;
-let quizQuestions = [];
-let currentQuizIndex = 0;
-let score = 0;
-let isHardQuiz = false;
+let currentStudyIndex = 0, currentFlashcardIndex = 0, quizQuestions = [], currentQuizIndex = 0, score = 0;
+const synth = window.speechSynthesis;
 
-// --- INSTANT LOAD (LOCAL STORAGE) ---
-window.onload = function() {
-    loadUserData();
-};
+window.onload = () => { loadUserData(); };
 
 function loadUserData() {
-    // Load saved indexes directly from device
-    currentStudyIndex = parseInt(localStorage.getItem(`civics_studyIndex`)) || 0;
-    currentFlashcardIndex = parseInt(localStorage.getItem(`civics_flashcardIndex`)) || 0;
-    
-    // Calculate Mastery
-    const totalQ = parseInt(localStorage.getItem(`civics_totalQuestions`)) || 0;
-    const correctA = parseInt(localStorage.getItem(`civics_correctAnswers`)) || 0;
-    
-    let masteryPercent = 0;
-    if (totalQ > 0) {
-        masteryPercent = Math.round((correctA / totalQ) * 100);
-    }
-    
-    document.getElementById('mastery-percentage').innerText = `${masteryPercent}%`;
-    
-    // MATHEMATICALLY CALCULATE COLOR: 0% = Red (0 hue), 100% = Green (120 hue)
-    let hue = Math.round((masteryPercent / 100) * 120); 
-    let progressColor = `hsl(${hue}, 80%, 45%)`; 
-    
-    // Update the ring's stroke size based on percentage
-    let ringDegrees = masteryPercent * 3.6; // 100% = 360 degrees
-    document.getElementById('progress-circle').style.background = `conic-gradient(${progressColor} ${ringDegrees}deg, rgba(0,0,0,0.1) 0deg)`;
-    
-    // Update status text
-    let resumeText = document.getElementById('resume-text');
-    if (totalQ === 0) resumeText.innerText = "Take a quiz to see your mastery!";
-    else if (masteryPercent >= 90) resumeText.innerText = "Outstanding! You are ready.";
-    else if (masteryPercent >= 70) resumeText.innerText = "Doing great. Keep studying!";
-    else resumeText.innerText = "Keep practicing, you'll get it!";
+    currentStudyIndex = parseInt(localStorage.getItem(`civ_studyIndex`)) || 0;
+    currentFlashcardIndex = parseInt(localStorage.getItem(`civ_flashcardIndex`)) || 0;
+    const totalQ = parseInt(localStorage.getItem(`civ_totalQ`)) || 0, correctA = parseInt(localStorage.getItem(`civ_correctA`)) || 0;
+    let mastery = totalQ > 0 ? Math.round((correctA / totalQ) * 100) : 0;
+    document.getElementById('mastery-percentage').innerText = mastery + "%";
+    let hue = Math.round((mastery / 100) * 120); 
+    document.getElementById('progress-circle').style.background = `conic-gradient(hsl(${hue}, 80%, 45%) ${mastery * 3.6}deg, rgba(255,255,255,0.1) 0deg)`;
+    let rt = document.getElementById('resume-text');
+    rt.innerText = totalQ === 0 ? "Take a quiz to see your mastery!" : mastery >= 90 ? "You are ready!" : "Keep studying!";
 }
 
-function saveProgress(type, index) {
-    localStorage.setItem(`civics_${type}Index`, index);
-}
-
-function updateMastery(newTotal, newCorrect) {
-    let currentTotal = parseInt(localStorage.getItem(`civics_totalQuestions`)) || 0;
-    let currentCorrect = parseInt(localStorage.getItem(`civics_correctAnswers`)) || 0;
-    
-    localStorage.setItem(`civics_totalQuestions`, currentTotal + newTotal);
-    localStorage.setItem(`civics_correctAnswers`, currentCorrect + newCorrect);
-    loadUserData(); // Refresh the dynamic ring
-}
-
-// --- AUDIO (Subtle Click & AI Voice) ---
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const synth = window.speechSynthesis;
-synth.getVoices();
-
-function playClickSound() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.05);
-    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.05);
+function updateMastery(q, c) {
+    localStorage.setItem(`civ_totalQ`, (parseInt(localStorage.getItem(`civ_totalQ`)) || 0) + q);
+    localStorage.setItem(`civ_correctA`, (parseInt(localStorage.getItem(`civ_correctA`)) || 0) + c);
+    loadUserData();
 }
 
 function speakQuestion(text) {
-    synth.cancel(); 
+    synth.cancel();
     setTimeout(() => {
-        const utterThis = new SpeechSynthesisUtterance(text);
-        utterThis.rate = 1.05; // Perfect talking speed
-        const voices = synth.getVoices();
-        const betterVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || (v.lang === 'en-US' && v.name.includes('Female')));
-        if (betterVoice) utterThis.voice = betterVoice;
-        synth.speak(utterThis);
-    }, 100); 
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1.05;
+        const v = synth.getVoices();
+        u.voice = v.find(n => n.name.includes('Google') || n.name.includes('Samantha')) || v[0];
+        synth.speak(u);
+    }, 100);
 }
 
-document.addEventListener('click', function(e) {
-    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('answer-card') || e.target.closest('.flip-card')) {
-        playClickSound();
-    }
-});
+function cleanText(t) { return t.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
+function norm(t) { return cleanText(t).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, "").trim(); }
 
-// --- SPEECH RECOGNITION (For Hard Quiz) ---
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition;
-if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = function() {
-        document.getElementById('mic-btn').classList.add('recording');
-        document.getElementById('mic-btn').innerText = "🎙️ Listening...";
-        document.getElementById('mic-status').innerText = "Speak now...";
-    };
-    recognition.onresult = function(event) {
-        document.getElementById('hard-quiz-input').value = event.results[0][0].transcript;
-        document.getElementById('mic-status').innerText = "Caught it! You can edit or check answer.";
-    };
-    recognition.onerror = function() {
-        document.getElementById('mic-status').innerText = "Didn't hear that. Try again or type.";
-        stopMicrophoneUI();
-    };
-    recognition.onend = function() { stopMicrophoneUI(); };
-}
-
-function toggleMicrophone() {
-    if (!recognition) { alert("Speech recognition isn't supported. Please type."); return; }
-    synth.cancel(); 
-    try { recognition.start(); } catch (e) { recognition.stop(); }
-}
-function stopMicrophoneUI() {
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-btn').innerText = "🎤 Tap to Speak";
-}
-
-// --- UTILITIES ---
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-function cleanText(text) { return text.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
-function normalizeForComparison(text) { 
-    return cleanText(text).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, "").trim(); 
-}
-
-function isForgivingMatch(userInput, officialAnswers) {
-    const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
-    const cleanInput = normalizeForComparison(userInput);
-
-    for (let ans of officialAnswers) {
-        const cleanAns = normalizeForComparison(ans);
-        if (cleanInput.includes(cleanAns) || (cleanAns.includes(cleanInput) && cleanInput.length > 4)) return true;
-
-        const ansWords = cleanAns.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
-        if (ansWords.length === 0) continue;
-
-        let matchCount = 0;
-        for (let w of ansWords) { if (cleanInput.includes(w)) matchCount++; }
-        
-        if (ansWords.length <= 2) { if (matchCount === ansWords.length) return true; } 
-        else { if (matchCount / ansWords.length >= 0.5) return true; }
+function isMatch(inp, ansList) {
+    const stop = ['the', 'a', 'it', 'is', 'of', 'for', 'in', 'that', 'from', 'because', 'they', 'have'];
+    const cleanInp = norm(inp);
+    for (let a of ansList) {
+        const cleanA = norm(a);
+        if (cleanInp.includes(cleanA) || (cleanA.includes(cleanInp) && cleanInp.length > 4)) return true;
+        const words = cleanA.split(' ').filter(w => !stop.includes(w) && w.length > 1);
+        let m = 0;
+        words.forEach(w => { if (cleanInp.includes(w)) m++; });
+        if (words.length <= 2 ? m === words.length : m / words.length >= 0.5) return true;
     }
     return false;
 }
 
-// --- NAVIGATION ---
-function showScreen(screenId) {
-    synth.cancel(); 
-    if(recognition) { try { recognition.stop(); } catch(e){} }
-    stopMicrophoneUI();
-    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
-    window.scrollTo(0, 0); 
+function showScreen(id) {
+    synth.cancel();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
 }
-function goHome() { showScreen('home-screen'); loadUserData(); } 
 
-// --- STUDY MODE & FLASHCARDS ---
-function startStudy() { renderStudyQuestion(); showScreen('study-screen'); }
-function renderStudyQuestion() {
+function goHome() { showScreen('home-screen'); loadUserData(); }
+
+function startStudy() { renderStudy(); showScreen('study-screen'); }
+function renderStudy() {
     const q = civicsData[currentStudyIndex];
-    document.getElementById('study-progress').innerText = `Question ${currentStudyIndex + 1} of ${civicsData.length}`;
+    document.getElementById('study-progress').innerText = `Question ${currentStudyIndex + 1} of 128`;
     document.getElementById('study-question').innerText = cleanText(q.question);
-    document.getElementById('study-answers').innerHTML = q.answers.map(ans => `<li>${cleanText(ans)}</li>`).join('');
-    saveProgress('study', currentStudyIndex);
+    document.getElementById('study-answers').innerHTML = q.answers.map(a => `<li>${cleanText(a)}</li>`).join('');
+    localStorage.setItem('civ_studyIndex', currentStudyIndex);
 }
-function nextStudyQuestion() { currentStudyIndex = (currentStudyIndex + 1) % civicsData.length; renderStudyQuestion(); window.scrollTo(0, 0); }
-function skipTenStudyQuestions() { currentStudyIndex = Math.min(currentStudyIndex + 10, civicsData.length - 1); renderStudyQuestion(); window.scrollTo(0, 0); }
-function backTenStudyQuestions() { currentStudyIndex = Math.max(currentStudyIndex - 10, 0); renderStudyQuestion(); window.scrollTo(0, 0); }
+function nextStudyQuestion() { currentStudyIndex = (currentStudyIndex + 1) % 128; renderStudy(); }
+function skipTenStudyQuestions() { currentStudyIndex = Math.min(currentStudyIndex + 10, 127); renderStudy(); }
+function backTenStudyQuestions() { currentStudyIndex = Math.max(currentStudyIndex - 10, 0); renderStudy(); }
 
-function startFlashcards() { renderFlashcard(); showScreen('flashcard-screen'); }
-function renderFlashcard() {
+function startFlashcards() { renderFlash(); showScreen('flashcard-screen'); }
+function renderFlash() {
     document.querySelector('.flip-card').classList.remove('flipped');
     const q = civicsData[currentFlashcardIndex];
-    document.getElementById('flashcard-progress').innerText = `Question ${currentFlashcardIndex + 1} of ${civicsData.length}`;
+    document.getElementById('flashcard-progress').innerText = `Question ${currentFlashcardIndex + 1} of 128`;
     document.getElementById('flashcard-question').innerText = cleanText(q.question);
-    const cleanAnswersArray = q.answers.map(ans => cleanText(ans));
-    document.getElementById('flashcard-answer').innerText = cleanAnswersArray.length > 1 ? `• ` + cleanAnswersArray.join(`\n• `) : cleanAnswersArray[0];
-    saveProgress('flashcard', currentFlashcardIndex);
+    document.getElementById('flashcard-answer').innerText = q.answers.map(cleanText).join('\n• ');
+    localStorage.setItem('civ_flashcardIndex', currentFlashcardIndex);
 }
 function toggleFlashcard() { document.querySelector('.flip-card').classList.toggle('flipped'); }
-function nextFlashcard() { currentFlashcardIndex = (currentFlashcardIndex + 1) % civicsData.length; renderFlashcard(); }
-function skipTenFlashcards() { currentFlashcardIndex = Math.min(currentFlashcardIndex + 10, civicsData.length - 1); renderFlashcard(); }
-function backTenFlashcards() { currentFlashcardIndex = Math.max(currentFlashcardIndex - 10, 0); renderFlashcard(); }
+function nextFlashcard() { currentFlashcardIndex = (currentFlashcardIndex + 1) % 128; renderFlash(); }
+function skipTenFlashcards() { currentFlashcardIndex = Math.min(currentFlashcardIndex + 10, 127); renderFlash(); }
+function backTenFlashcards() { currentFlashcardIndex = Math.max(currentFlashcardIndex - 10, 0); renderFlash(); }
 
-// --- STANDARD QUIZ MODE ---
-function startQuiz() {
-    isHardQuiz = false; score = 0; currentQuizIndex = 0;
-    quizQuestions = shuffleArray([...civicsData]).slice(0, 20);
-    renderQuizQuestion(); showScreen('quiz-screen');
-}
-
-function renderQuizQuestion() {
+function startQuiz() { quizQuestions = [...civicsData].sort(() => 0.5 - Math.random()).slice(0, 20); currentQuizIndex = 0; score = 0; renderQuiz(); showScreen('quiz-screen'); }
+function renderQuiz() {
     const q = quizQuestions[currentQuizIndex];
     document.getElementById('quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 20`;
-    document.getElementById('quiz-progress-bar').style.width = `${((currentQuizIndex) / 20) * 100}%`;
-    const cleanQ = cleanText(q.question);
-    document.getElementById('quiz-question').innerText = cleanQ;
-    speakQuestion(cleanQ); 
-    
-    const correctAnswer = cleanText(q.answers[0]); 
-    const selectedWrongAnswers = shuffleArray([...q.wrong]).slice(0, 3).map(ans => cleanText(ans));
-    
-    let options = [ { text: correctAnswer, isCorrect: true }, { text: selectedWrongAnswers[0], isCorrect: false }, { text: selectedWrongAnswers[1], isCorrect: false }, { text: selectedWrongAnswers[2], isCorrect: false } ];
-    options = shuffleArray(options);
-    
-    const optionsContainer = document.getElementById('quiz-options');
-    optionsContainer.innerHTML = '';
-    options.forEach(opt => {
-        const div = document.createElement('div');
-        div.className = 'answer-card'; div.innerText = opt.text;
-        div.onclick = () => handleAnswerClick(div, opt.isCorrect, correctAnswer);
-        optionsContainer.appendChild(div);
+    document.getElementById('quiz-progress-bar').style.width = (currentQuizIndex / 20 * 100) + "%";
+    document.getElementById('quiz-question').innerText = cleanText(q.question);
+    speakQuestion(cleanText(q.question));
+    const opts = [{t: q.answers[0], c: true}, ...q.wrong.slice(0, 3).map(w => ({t: w, c: false}))].sort(() => 0.5 - Math.random());
+    const container = document.getElementById('quiz-options');
+    container.innerHTML = '';
+    opts.forEach(o => {
+        const d = document.createElement('div'); d.className = 'answer-card'; d.innerText = cleanText(o.t);
+        d.onclick = () => {
+            if (o.c) { d.classList.add('correct'); score++; } else d.classList.add('incorrect');
+            document.querySelectorAll('.answer-card').forEach(card => card.style.pointerEvents = 'none');
+            document.getElementById('quiz-next-btn').disabled = false;
+        };
+        container.appendChild(d);
     });
-
     document.getElementById('quiz-next-btn').disabled = true;
-    document.getElementById('quiz-next-btn').innerText = currentQuizIndex === 19 ? "Finish Quiz" : "Next";
 }
+function nextQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderQuiz(); else finishQuiz(); }
 
-function handleAnswerClick(clickedDiv, isCorrect, correctAnswerText) {
-    const allCards = document.querySelectorAll('.answer-card');
-    allCards.forEach(card => card.classList.add('disabled'));
-    
-    if (isCorrect) { clickedDiv.classList.add('correct'); score++; } 
-    else {
-        clickedDiv.classList.add('incorrect');
-        allCards.forEach(card => { if (card.innerText === correctAnswerText) card.classList.add('correct'); });
-    }
-    document.getElementById('quiz-next-btn').disabled = false;
-}
-
-function nextQuizQuestion() {
-    currentQuizIndex++;
-    if (currentQuizIndex < 20) { renderQuizQuestion(); window.scrollTo(0, 0); } 
-    else { endQuiz(true); }
-}
-
-// --- HARD QUIZ MODE (VOICE) ---
-function startHardQuiz() {
-    isHardQuiz = true; score = 0; currentQuizIndex = 0;
-    quizQuestions = shuffleArray([...civicsData]).slice(0, 20);
-    renderHardQuizQuestion(); showScreen('hard-quiz-screen');
-}
-
-function renderHardQuizQuestion() {
+function startHardQuiz() { quizQuestions = [...civicsData].sort(() => 0.5 - Math.random()).slice(0, 20); currentQuizIndex = 0; score = 0; renderHard(); showScreen('hard-quiz-screen'); }
+function renderHard() {
     const q = quizQuestions[currentQuizIndex];
-    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 20`;
-    document.getElementById('hard-quiz-progress-bar').style.width = `${((currentQuizIndex) / 20) * 100}%`;
-    const cleanQ = cleanText(q.question);
-    document.getElementById('hard-quiz-question').innerText = cleanQ;
-    speakQuestion(cleanQ); 
-    
+    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex+1} of 20`;
+    document.getElementById('hard-quiz-progress-bar').style.width = (currentQuizIndex / 20 * 100) + "%";
+    document.getElementById('hard-quiz-question').innerText = cleanText(q.question);
+    speakQuestion(cleanText(q.question));
     document.getElementById('hard-quiz-input').value = '';
     document.getElementById('hard-quiz-feedback').innerText = '';
-    document.getElementById('mic-status').innerText = 'Ready...';
     document.getElementById('hard-quiz-check-btn').style.display = 'block';
     document.getElementById('hard-quiz-next-btn').style.display = 'none';
-    
-    document.getElementById('hard-quiz-next-btn').innerText = currentQuizIndex === 19 ? "Finish Quiz" : "Next";
 }
-
 function checkHardAnswer() {
-    if(recognition) { try { recognition.stop(); } catch(e){} }
-    stopMicrophoneUI();
-
-    const userInput = document.getElementById('hard-quiz-input').value;
+    const inp = document.getElementById('hard-quiz-input').value;
     const q = quizQuestions[currentQuizIndex];
-    const feedback = document.getElementById('hard-quiz-feedback');
-    
-    if (!userInput.trim()) {
-        feedback.innerText = "Please speak or type an answer first!";
-        feedback.className = "feedback-text feedback-incorrect";
-        return;
-    }
-
-    const isCorrect = isForgivingMatch(userInput, q.answers);
-    if (isCorrect) {
-        score++;
-        feedback.innerText = "✅ Correct!";
-        feedback.className = "feedback-text feedback-correct";
-    } else {
-        feedback.innerText = `❌ Incorrect. Accepted answers: \n• ${q.answers.map(a => cleanText(a)).join('\n• ')}`;
-        feedback.className = "feedback-text feedback-incorrect";
-    }
-
+    if (isMatch(inp, q.answers)) { score++; document.getElementById('hard-quiz-feedback').innerText = "✅ Correct!"; }
+    else document.getElementById('hard-quiz-feedback').innerText = "❌ Incorrect. Try: " + cleanText(q.answers[0]);
     document.getElementById('hard-quiz-check-btn').style.display = 'none';
     document.getElementById('hard-quiz-next-btn').style.display = 'block';
 }
+function nextHardQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderHard(); else finishQuiz(); }
 
-function nextHardQuizQuestion() {
-    currentQuizIndex++;
-    if (currentQuizIndex < 20) { renderHardQuizQuestion(); window.scrollTo(0, 0); } 
-    else { endQuiz(true); }
-}
-
-// --- END & MODAL ---
-function endQuiz(completed = false) {
-    if (completed) {
-        updateMastery(20, score);
-
-        let finalMessage = "";
-        if (score === 20) finalMessage = "🏆 Perfect Citizen!";
-        else if (score >= 15) finalMessage = "⭐ Great Job!";
-        else finalMessage = "📚 Keep Studying!";
-        
-        document.getElementById('final-score').innerHTML = `Your Score: ${score} / 20<br><span style="font-size:24px; color:#ffffff;">${finalMessage}</span>`;
-        showScreen('result-screen');
-    } else { goHome(); }
-}
-
+function finishQuiz() { updateMastery(20, score); document.getElementById('final-score').innerText = `Score: ${score} / 20`; showScreen('result-screen'); }
 function promptEndQuiz() { document.getElementById('confirmation-modal').classList.add('active'); }
 function cancelEndQuiz() { document.getElementById('confirmation-modal').classList.remove('active'); }
-function confirmEndQuiz() { document.getElementById('confirmation-modal').classList.remove('active'); endQuiz(false); }
+function confirmEndQuiz() { cancelEndQuiz(); goHome(); }
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec;
+if (SpeechRecognition) {
+    rec = new SpeechRecognition();
+    rec.onstart = () => { document.getElementById('mic-btn').classList.add('recording'); };
+    rec.onresult = (e) => { document.getElementById('hard-quiz-input').value = e.results[0][0].transcript; };
+    rec.onend = () => { document.getElementById('mic-btn').classList.remove('recording'); };
+}
+function toggleMicrophone() { try { rec.start(); } catch(e) { rec.stop(); } }
