@@ -34,7 +34,7 @@ function startStudy() {
 
 function renderStudyQuestion() {
     const q = civicsData[currentStudyIndex];
-    document.getElementById('study-progress').innerText = `Question ${currentStudyIndex + 1} of 128`;
+    document.getElementById('study-progress').innerText = `Question ${currentStudyIndex + 1} of ${civicsData.length}`;
     document.getElementById('study-question').innerText = q.question;
     
     const answersHtml = q.answers.map(ans => `<li>${ans}</li>`).join('');
@@ -43,8 +43,25 @@ function renderStudyQuestion() {
 
 function nextStudyQuestion() {
     currentStudyIndex++;
+    
+    // Reset to question 1 if we pass the last question
     if (currentStudyIndex >= civicsData.length) {
-        currentStudyIndex = 0; // Loop back to 1
+        currentStudyIndex = 0; 
+    }
+    renderStudyQuestion();
+}
+
+function skipTenStudyQuestions() {
+    // If you are already on the last question, reset to Question 1
+    if (currentStudyIndex === civicsData.length - 1) {
+        currentStudyIndex = 0;
+    } else {
+        currentStudyIndex += 10;
+        
+        // If skipping 10 takes you past the last question, stop exactly on the last question
+        if (currentStudyIndex >= civicsData.length) {
+            currentStudyIndex = civicsData.length - 1; 
+        }
     }
     renderStudyQuestion();
 }
