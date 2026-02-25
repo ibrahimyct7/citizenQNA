@@ -37,7 +37,12 @@ body, html {
 .score-text { font-size: 42px; margin-bottom: 40px; color: #ffd60a; }
 
 /* BUTTONS */
-.button-group { display: flex; gap: 20px; margin-top: 40px; }
+.button-group { 
+    display: flex; 
+    gap: 20px; 
+    margin-top: 40px; 
+    flex-wrap: wrap; /* Allows buttons to stack nicely if screen is small */
+}
 
 button {
     background-color: #ffd60a;
@@ -110,6 +115,6 @@ button.btn-secondary {
     .title { font-size: 42px; }
     .question-text { font-size: 28px; }
     .answer-card { font-size: 18px; padding: 16px; }
-    .button-group { flex-direction: column; }
-    button { width: 100%; }
+    .button-group { flex-direction: column; width: 100%; }
+    button { width: 100%; } /* Forces buttons to be full-width and stacked */
 }
