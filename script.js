@@ -13,13 +13,11 @@ function loadUserData() {
     currentFlashcardIndex = parseInt(localStorage.getItem(`civ_flashcardIndex`)) || 0;
     const totalQ = parseInt(localStorage.getItem(`civ_totalQ`)) || 0, correctA = parseInt(localStorage.getItem(`civ_correctA`)) || 0;
     let mastery = totalQ > 0 ? Math.round((correctA / totalQ) * 100) : 0;
-    
     document.getElementById('mastery-percentage').innerText = mastery + "%";
     let degrees = mastery * 3.6;
     let hue = Math.round((mastery / 100) * 120); 
     let activeColor = `hsl(${hue}, 80%, 50%)`;
     document.getElementById('progress-circle').style.background = `conic-gradient(${activeColor} ${degrees}deg, rgba(255,255,255,0.1) ${degrees}deg)`;
-    
     document.getElementById('resume-text').innerText = totalQ === 0 ? "Take a quiz to see your mastery!" : mastery >= 90 ? "Excellent Mastery!" : "Keep Practicing!";
 }
 
@@ -43,23 +41,32 @@ function speakQuestion(text) {
 function cleanText(t) { return t.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
 function norm(t) { return cleanText(t).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, "").trim(); }
 
-// --- SUPER FORGIVING ENGINE ---
+// --- TIGHTENED FORGIVING ENGINE (STRICT BUT FAIR) ---
 function isMatch(inp, ansList) {
-    const cleanInp = norm(inp);
+    const cleanInp = " " + norm(inp) + " ";
     const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
-    const stems = { "writer": "wrote", "writing": "wrote", "written": "wrote", "wrote": "wrote" };
+    const variations = { "writer": "wrote", "writing": "wrote", "written": "wrote", "wrote": "wrote" };
 
     for (let a of ansList) {
         const cleanA = norm(a);
-        if (cleanInp.includes(cleanA) || cleanA.includes(cleanInp)) return true;
         const aWords = cleanA.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
-        const iWords = cleanInp.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
-        let matches = 0;
-        aWords.forEach(aw => {
-            const stemA = stems[aw] || aw;
-            if (iWords.some(iw => (stems[iw] || iw) === stemA || iw.includes(stemA) || stemA.includes(iw))) { matches++; }
+        
+        // Single word answers must match perfectly (ignoring casing)
+        if (aWords.length === 0) {
+            if (cleanInp.trim() === cleanA) return true;
+            continue;
+        }
+
+        let matchCount = 0;
+        aWords.forEach(word => {
+            const check = variations[word] || word;
+            if (cleanInp.includes(" " + check + " ") || cleanInp.includes(" " + word + " ")) {
+                matchCount++;
+            }
         });
-        if (matches / aWords.length >= 0.5) return true;
+
+        // STRICTOR THRESHOLD: Must get 75% of core keywords right
+        if (matchCount / aWords.length >= 0.75) return true;
     }
     return false;
 }
@@ -72,7 +79,6 @@ function showScreen(id) {
 }
 
 function goHome() { showScreen('home-screen'); loadUserData(); }
-
 function startStudy() { renderStudy(); showScreen('study-screen'); }
 function renderStudy() {
     const q = civicsData[currentStudyIndex];
@@ -125,7 +131,7 @@ function nextQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) ren
 function startHardQuiz() { quizQuestions = [...civicsData].sort(() => 0.5 - Math.random()).slice(0, 20); currentQuizIndex = 0; score = 0; renderHard(); showScreen('hard-quiz-screen'); }
 function renderHard() {
     const q = quizQuestions[currentQuizIndex];
-    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 20`;
+    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex+1} of 20`;
     document.getElementById('hard-quiz-progress-bar').style.width = (currentQuizIndex / 20 * 100) + "%";
     document.getElementById('hard-quiz-question').innerText = cleanText(q.question);
     speakQuestion(cleanText(q.question));
@@ -143,7 +149,7 @@ function checkHardAnswer() {
         document.getElementById('hard-quiz-feedback').innerText = "✅ Correct!"; 
         document.getElementById('hard-quiz-feedback').style.color = "#28a745"; 
     } else { 
-        document.getElementById('hard-quiz-feedback').innerText = "❌ No. Answer: " + cleanText(q.answers[0]); 
+        document.getElementById('hard-quiz-feedback').innerText = "❌ Incorrect. Answer: " + cleanText(q.answers[0]); 
         document.getElementById('hard-quiz-feedback').style.color = "#ff4d4d"; 
     }
     document.getElementById('hard-quiz-check-btn').style.display = 'none';
@@ -163,7 +169,7 @@ if (SpeechRecognition) {
     rec = new SpeechRecognition();
     rec.onstart = () => { 
         document.getElementById('mic-btn').classList.add('recording'); 
-        document.getElementById('mic-status').innerText = "Speak";
+        document.getElementById('mic-status').innerText = "Speak Now";
     };
     rec.onresult = (e) => { document.getElementById('hard-quiz-input').value = e.results[0][0].transcript; };
     rec.onend = () => { 
