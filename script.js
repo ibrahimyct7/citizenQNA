@@ -1,5 +1,6 @@
 // --- STATE VARIABLES ---
 let currentStudyIndex = 0;
+let currentFlashcardIndex = 0;
 let quizQuestions = [];
 let currentQuizIndex = 0;
 let score = 0;
@@ -26,6 +27,15 @@ function shuffleArray(array) {
     return array;
 }
 
+function getQuestionCategory(qText) {
+    const lowerQ = qText.toLowerCase();
+    if (lowerQ.includes("how many") || lowerQ.includes("how long") || lowerQ.includes("how old")) return "number";
+    if (lowerQ.includes("who") || lowerQ.includes("name one") || lowerQ.includes("name two") || lowerQ.includes("president")) return "person";
+    if (lowerQ.includes("when") || lowerQ.includes("what year") || lowerQ.includes("what month")) return "date";
+    if (lowerQ.includes("where") || lowerQ.includes("ocean") || lowerQ.includes("territory") || lowerQ.includes("state") || lowerQ.includes("capital")) return "geography";
+    return "general";
+}
+
 // --- STUDY MODE ---
 function startStudy() {
     currentStudyIndex = 0;
@@ -44,9 +54,7 @@ function renderStudyQuestion() {
 
 function nextStudyQuestion() {
     currentStudyIndex++;
-    if (currentStudyIndex >= civicsData.length) {
-        currentStudyIndex = 0; 
-    }
+    if (currentStudyIndex >= civicsData.length) currentStudyIndex = 0; 
     renderStudyQuestion();
     window.scrollTo(0, 0);
 }
@@ -56,12 +64,38 @@ function skipTenStudyQuestions() {
         currentStudyIndex = 0;
     } else {
         currentStudyIndex += 10;
-        if (currentStudyIndex >= civicsData.length) {
-            currentStudyIndex = civicsData.length - 1; 
-        }
+        if (currentStudyIndex >= civicsData.length) currentStudyIndex = civicsData.length - 1; 
     }
     renderStudyQuestion();
     window.scrollTo(0, 0);
+}
+
+// --- FLASHCARDS MODE ---
+function startFlashcards() {
+    currentFlashcardIndex = 0;
+    renderFlashcard();
+    showScreen('flashcard-screen');
+}
+
+function renderFlashcard() {
+    document.querySelector('.flip-card').classList.remove('flipped');
+    
+    const q = civicsData[currentFlashcardIndex];
+    document.getElementById('flashcard-progress').innerText = `Question ${currentFlashcardIndex + 1} of ${civicsData.length}`;
+    document.getElementById('flashcard-question').innerText = q.question;
+    
+    const answerText = q.answers.length > 1 ? `• ` + q.answers.join(`\n• `) : q.answers[0];
+    document.getElementById('flashcard-answer').innerText = answerText;
+}
+
+function toggleFlashcard() {
+    document.querySelector('.flip-card').classList.toggle('flipped');
+}
+
+function nextFlashcard() {
+    currentFlashcardIndex++;
+    if (currentFlashcardIndex >= civicsData.length) currentFlashcardIndex = 0; 
+    renderFlashcard();
 }
 
 // --- QUIZ MODE ---
@@ -86,10 +120,14 @@ function renderQuizQuestion() {
     document.getElementById('quiz-question').innerText = q.question;
     
     const correctAnswer = q.answers[0]; 
-    let wrongAnswersPool = civicsData
-        .filter(item => item.id !== q.id)
-        .map(item => item.answers[0]);
+    const currentCategory = getQuestionCategory(q.question);
     
+    let similarQuestions = civicsData.filter(item => item.id !== q.id && getQuestionCategory(item.question) === currentCategory);
+    if (similarQuestions.length < 3) {
+        similarQuestions = civicsData.filter(item => item.id !== q.id);
+    }
+    
+    let wrongAnswersPool = similarQuestions.map(item => item.answers[0]);
     wrongAnswersPool = shuffleArray(wrongAnswersPool);
     const selectedWrongAnswers = wrongAnswersPool.slice(0, 3);
     
@@ -171,5 +209,5 @@ function cancelEndQuiz() {
 
 function confirmEndQuiz() {
     document.getElementById('confirmation-modal').classList.remove('active');
-    endQuiz(false); // This executes the actual goHome() behavior
+    endQuiz(false); 
 }
