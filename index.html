@@ -9,14 +9,17 @@
 <body>
 
     <div id="home-screen" class="screen center-content active">
+        <div class="stars">★ ★ ★</div>
         <h1 class="title">US Civics Study App</h1>
         <div class="button-group">
             <button onclick="startStudy()">Study Mode</button>
             <button onclick="startQuiz()">Quiz Mode</button>
+            <button onclick="startFlashcards()">Flashcards</button>
         </div>
     </div>
 
     <div id="study-screen" class="screen">
+        <div class="stars center-stars">★ ★ ★</div>
         <h2 id="study-progress" class="progress-text">Question 1 of 128</h2>
         <h1 id="study-question" class="question-text">Question goes here?</h1>
         <ul id="study-answers" class="answer-list">
@@ -28,7 +31,31 @@
         </div>
     </div>
 
+    <div id="flashcard-screen" class="screen center-content">
+        <div class="stars center-stars">★ ★ ★</div>
+        <h2 id="flashcard-progress" class="progress-text">Question 1 of 128</h2>
+        
+        <div class="flip-card" onclick="toggleFlashcard()">
+            <div id="flashcard-inner" class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p id="flashcard-question" class="flashcard-text">Question?</p>
+                    <span class="flashcard-hint">Tap to flip</span>
+                </div>
+                <div class="flip-card-back">
+                    <p id="flashcard-answer" class="flashcard-text">Answer!</p>
+                    <span class="flashcard-hint">Tap to flip back</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group center-buttons">
+            <button onclick="nextFlashcard()">Next</button>
+            <button onclick="goHome()" class="btn-secondary">Home</button>
+        </div>
+    </div>
+
     <div id="quiz-screen" class="screen">
+        <div class="stars center-stars">★ ★ ★</div>
         <h2 id="quiz-progress-text" class="progress-text">Question 1 of 20</h2>
         <div class="progress-bar-container">
             <div id="quiz-progress-bar" class="progress-bar"></div>
@@ -43,6 +70,7 @@
     </div>
 
     <div id="result-screen" class="screen center-content">
+        <div class="stars center-stars">★ ★ ★</div>
         <h1 class="title">Quiz Complete</h1>
         <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
         <div class="button-group">
@@ -54,7 +82,7 @@
     <div id="confirmation-modal" class="modal">
         <div class="modal-content">
             <h2 class="question-text">Are you sure?</h2>
-            <p class="progress-text">If you end the quiz now, your progress will be lost.</p>
+            <p class="progress-text" style="color: #ffffff;">If you end the quiz now, your progress will be lost.</p>
             <div class="button-group center-buttons">
                 <button onclick="cancelEndQuiz()">No, stay here</button>
                 <button onclick="confirmEndQuiz()" class="btn-danger">Yes, end quiz</button>
