@@ -13,30 +13,18 @@
 </head>
 <body>
 
-    <div id="login-screen" class="screen center-content active">
-        <div class="stars">★ ★ ★</div>
-        <h1 class="title">US Civics Study App</h1>
-        <p class="progress-text" style="color: #ffffff; margin-bottom: 30px;">Login or create a new local account to save your progress.</p>
-        
-        <div class="login-box">
-            <input type="text" id="username-input" class="auth-input" placeholder="Enter your name" autocomplete="off">
-            <input type="password" id="password-input" class="auth-input" placeholder="Create or enter password">
-            <button onclick="handleLogin()" style="width: 100%; margin-top: 10px;">Login / Start</button>
-            <p id="login-error" class="feedback-incorrect" style="display: none; font-size: 18px; margin-top: 15px;"></p>
-        </div>
-    </div>
-
-    <div id="home-screen" class="screen center-content">
+    <div id="home-screen" class="screen center-content active">
         <div class="stars">★ ★ ★</div>
         <h1 class="title">Dashboard</h1>
         
         <div class="progress-card">
-            <h2 id="welcome-text" style="margin-top: 0; color: #0a3161;">Welcome!</h2>
-            <div class="mastery-circle">
-                <span id="mastery-percentage">0%</span>
+            <h2 id="welcome-text" class="welcome-text">Welcome!</h2>
+            
+            <div class="circular-progress" id="progress-circle">
+                <span id="mastery-percentage" class="circular-progress-value">0%</span>
             </div>
-            <p style="color: #333333; font-weight: bold; margin-bottom: 0;">Civics Mastery</p>
-            <p id="resume-text" style="color: #666; font-size: 16px; margin-top: 5px;">Ready to learn.</p>
+            
+            <p id="resume-text" class="status-text">Take a quiz to see your mastery!</p>
         </div>
 
         <div class="button-group home-buttons">
@@ -45,7 +33,6 @@
             <button onclick="startQuiz()">Standard Quiz</button>
             <button onclick="startHardQuiz()" class="btn-hard">Hard Quiz (Voice)</button>
         </div>
-        <button onclick="logout()" class="btn-secondary" style="margin-top: 40px; font-size: 16px; padding: 10px 20px;">Log Out</button>
     </div>
 
     <div id="study-screen" class="screen">
@@ -137,8 +124,8 @@
 
     <div id="confirmation-modal" class="modal">
         <div class="modal-content">
-            <h2 class="question-text">Are you sure?</h2>
-            <p class="progress-text" style="color: #ffffff;">If you end the quiz now, your progress will be lost.</p>
+            <h2 class="question-text" style="color: #0a3161;">Are you sure?</h2>
+            <p class="progress-text" style="color: #333333;">If you end the quiz now, your progress will be lost.</p>
             <div class="button-group center-buttons">
                 <button onclick="cancelEndQuiz()">No, stay here</button>
                 <button onclick="confirmEndQuiz()" class="btn-danger">Yes, end quiz</button>
