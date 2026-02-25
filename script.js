@@ -10,6 +10,7 @@ function showScreen(screenId) {
         screen.classList.remove('active');
     });
     document.getElementById(screenId).classList.add('active');
+    window.scrollTo(0, 0); // Scroll to top when changing screens
 }
 
 function goHome() {
@@ -49,6 +50,7 @@ function nextStudyQuestion() {
         currentStudyIndex = 0; 
     }
     renderStudyQuestion();
+    window.scrollTo(0, 0);
 }
 
 function skipTenStudyQuestions() {
@@ -64,6 +66,7 @@ function skipTenStudyQuestions() {
         }
     }
     renderStudyQuestion();
+    window.scrollTo(0, 0);
 }
 
 // --- QUIZ MODE ---
@@ -153,6 +156,7 @@ function nextQuizQuestion() {
     currentQuizIndex++;
     if (currentQuizIndex < 20) {
         renderQuizQuestion();
+        window.scrollTo(0, 0);
     } else {
         endQuiz(true);
     }
