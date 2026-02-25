@@ -10,7 +10,7 @@ function showScreen(screenId) {
         screen.classList.remove('active');
     });
     document.getElementById(screenId).classList.add('active');
-    window.scrollTo(0, 0); // Scroll to top when changing screens
+    window.scrollTo(0, 0); 
 }
 
 function goHome() {
@@ -44,8 +44,6 @@ function renderStudyQuestion() {
 
 function nextStudyQuestion() {
     currentStudyIndex++;
-    
-    // Reset to question 1 if we pass the last question
     if (currentStudyIndex >= civicsData.length) {
         currentStudyIndex = 0; 
     }
@@ -54,13 +52,10 @@ function nextStudyQuestion() {
 }
 
 function skipTenStudyQuestions() {
-    // If you are already on the last question, reset to Question 1
     if (currentStudyIndex === civicsData.length - 1) {
         currentStudyIndex = 0;
     } else {
         currentStudyIndex += 10;
-        
-        // If skipping 10 takes you past the last question, stop exactly on the last question
         if (currentStudyIndex >= civicsData.length) {
             currentStudyIndex = civicsData.length - 1; 
         }
@@ -74,7 +69,6 @@ function startQuiz() {
     score = 0;
     currentQuizIndex = 0;
     
-    // Select 20 random unique questions
     let shuffledData = shuffleArray([...civicsData]);
     quizQuestions = shuffledData.slice(0, 20);
     
@@ -86,14 +80,12 @@ function renderQuizQuestion() {
     const q = quizQuestions[currentQuizIndex];
     document.getElementById('quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 20`;
     
-    // Update progress bar
     const progressPercent = ((currentQuizIndex) / 20) * 100;
     document.getElementById('quiz-progress-bar').style.width = `${progressPercent}%`;
     
     document.getElementById('quiz-question').innerText = q.question;
     
-    // Generate answers: 1 correct, 3 random incorrect from OTHER questions
-    const correctAnswer = q.answers[0]; // First official answer
+    const correctAnswer = q.answers[0]; 
     let wrongAnswersPool = civicsData
         .filter(item => item.id !== q.id)
         .map(item => item.answers[0]);
@@ -110,7 +102,6 @@ function renderQuizQuestion() {
     
     options = shuffleArray(options);
     
-    // Render options
     const optionsContainer = document.getElementById('quiz-options');
     optionsContainer.innerHTML = '';
     
@@ -132,7 +123,6 @@ function renderQuizQuestion() {
 }
 
 function handleAnswerClick(clickedDiv, isCorrect, correctAnswerText) {
-    // Disable all options
     const allCards = document.querySelectorAll('.answer-card');
     allCards.forEach(card => card.classList.add('disabled'));
     
@@ -141,7 +131,6 @@ function handleAnswerClick(clickedDiv, isCorrect, correctAnswerText) {
         score++;
     } else {
         clickedDiv.classList.add('incorrect');
-        // Find and highlight the correct one
         allCards.forEach(card => {
             if (card.innerText === correctAnswerText) {
                 card.classList.add('correct');
@@ -169,4 +158,18 @@ function endQuiz(completed = false) {
     } else {
         goHome();
     }
+}
+
+// --- MODAL CONFIRMATION LOGIC ---
+function promptEndQuiz() {
+    document.getElementById('confirmation-modal').classList.add('active');
+}
+
+function cancelEndQuiz() {
+    document.getElementById('confirmation-modal').classList.remove('active');
+}
+
+function confirmEndQuiz() {
+    document.getElementById('confirmation-modal').classList.remove('active');
+    endQuiz(false); // This executes the actual goHome() behavior
 }
