@@ -13,10 +13,13 @@ function loadUserData() {
     currentFlashcardIndex = parseInt(localStorage.getItem(`civ_flashcardIndex`)) || 0;
     const totalQ = parseInt(localStorage.getItem(`civ_totalQ`)) || 0, correctA = parseInt(localStorage.getItem(`civ_correctA`)) || 0;
     let mastery = totalQ > 0 ? Math.round((correctA / totalQ) * 100) : 0;
+    
     document.getElementById('mastery-percentage').innerText = mastery + "%";
     let degrees = mastery * 3.6;
     let hue = Math.round((mastery / 100) * 120); 
-    document.getElementById('progress-circle').style.background = `conic-gradient(hsl(${hue}, 80%, 50%) ${degrees}deg, rgba(255,255,255,0.1) ${degrees}deg)`;
+    let activeColor = `hsl(${hue}, 80%, 50%)`;
+    document.getElementById('progress-circle').style.background = `conic-gradient(${activeColor} ${degrees}deg, rgba(255,255,255,0.1) ${degrees}deg)`;
+    
     document.getElementById('resume-text').innerText = totalQ === 0 ? "Take a quiz to see your mastery!" : mastery >= 90 ? "Excellent Mastery!" : "Keep Practicing!";
 }
 
@@ -44,29 +47,18 @@ function norm(t) { return cleanText(t).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-
 function isMatch(inp, ansList) {
     const cleanInp = norm(inp);
     const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
-    
-    // Keywords for 'Writer' vs 'Wrote' handling
     const stems = { "writer": "wrote", "writing": "wrote", "written": "wrote", "wrote": "wrote" };
 
     for (let a of ansList) {
         const cleanA = norm(a);
-        
-        // 1. Direct contains check
         if (cleanInp.includes(cleanA) || cleanA.includes(cleanInp)) return true;
-
-        // 2. Keyword density check with stemming
         const aWords = cleanA.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
         const iWords = cleanInp.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
-        
         let matches = 0;
         aWords.forEach(aw => {
             const stemA = stems[aw] || aw;
-            if (iWords.some(iw => (stems[iw] || iw) === stemA || iw.includes(stemA) || stemA.includes(iw))) {
-                matches++;
-            }
+            if (iWords.some(iw => (stems[iw] || iw) === stemA || iw.includes(stemA) || stemA.includes(iw))) { matches++; }
         });
-
-        // If you hit 50% of core words, you pass.
         if (matches / aWords.length >= 0.5) return true;
     }
     return false;
@@ -126,6 +118,7 @@ function renderQuiz() {
         container.appendChild(d);
     });
     document.getElementById('quiz-next-btn').disabled = true;
+    document.getElementById('quiz-next-btn').innerText = currentQuizIndex === 19 ? "Finish" : "Next";
 }
 function nextQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderQuiz(); else finishQuiz(); }
 
@@ -155,6 +148,7 @@ function checkHardAnswer() {
     }
     document.getElementById('hard-quiz-check-btn').style.display = 'none';
     document.getElementById('hard-quiz-next-btn').style.display = 'block';
+    document.getElementById('hard-quiz-next-btn').innerText = currentQuizIndex === 19 ? "Finish" : "Next";
 }
 function nextHardQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderHard(); else finishQuiz(); }
 
