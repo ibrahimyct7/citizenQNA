@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <div id="home-screen" class="screen active">
+    <div id="home-screen" class="screen center-content active">
         <h1 class="title">US Civics Study App</h1>
         <div class="button-group">
             <button onclick="startStudy()">Study Mode</button>
@@ -37,17 +37,28 @@
         <div id="quiz-options" class="options-grid">
             </div>
         <div class="button-group">
-            <button onclick="endQuiz()" class="btn-secondary">End Quiz</button>
             <button id="quiz-next-btn" onclick="nextQuizQuestion()" disabled>Next</button>
+            <button onclick="promptEndQuiz()" class="btn-secondary">End Quiz</button>
         </div>
     </div>
 
-    <div id="result-screen" class="screen">
+    <div id="result-screen" class="screen center-content">
         <h1 class="title">Quiz Complete</h1>
         <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
         <div class="button-group">
             <button onclick="startQuiz()">Retake Quiz</button>
             <button onclick="goHome()">Home</button>
+        </div>
+    </div>
+
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="question-text">Are you sure?</h2>
+            <p class="progress-text">If you end the quiz now, your progress will be lost.</p>
+            <div class="button-group center-buttons">
+                <button onclick="cancelEndQuiz()">No, stay here</button>
+                <button onclick="confirmEndQuiz()" class="btn-danger">Yes, end quiz</button>
+            </div>
         </div>
     </div>
 
