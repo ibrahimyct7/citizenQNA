@@ -11,10 +11,10 @@
     <div id="home-screen" class="screen center-content active">
         <div class="stars">★ ★ ★</div>
         <h1 class="title">US Civics Study App</h1>
-        <div class="button-group">
+        <div class="button-group home-buttons">
             <button onclick="startStudy()">Study Mode</button>
-            <button onclick="startQuiz()">Quiz Mode</button>
             <button onclick="startFlashcards()">Flashcards</button>
+            <button onclick="startQuiz()">Quiz Mode</button>
         </div>
     </div>
 
@@ -24,11 +24,12 @@
         <h1 id="study-question" class="question-text">Question goes here?</h1>
         <ul id="study-answers" class="answer-list">
             </ul>
-        <div class="button-group">
+        <div class="nav-row">
+            <button onclick="backTenStudyQuestions()">&laquo; Back 10</button>
             <button onclick="nextStudyQuestion()">Next</button>
             <button onclick="skipTenStudyQuestions()">Skip 10 &raquo;</button>
-            <button onclick="goHome()" class="btn-secondary">Home</button>
         </div>
+        <button onclick="goHome()" class="btn-secondary full-width-home">Home</button>
     </div>
 
     <div id="flashcard-screen" class="screen center-content">
@@ -48,10 +49,12 @@
             </div>
         </div>
 
-        <div class="button-group center-buttons">
+        <div class="nav-row" style="width: 100%; max-width: 600px;">
+            <button onclick="backTenFlashcards()">&laquo; Back 10</button>
             <button onclick="nextFlashcard()">Next</button>
-            <button onclick="goHome()" class="btn-secondary">Home</button>
+            <button onclick="skipTenFlashcards()">Skip 10 &raquo;</button>
         </div>
+        <button onclick="goHome()" class="btn-secondary full-width-home" style="max-width: 600px;">Home</button>
     </div>
 
     <div id="quiz-screen" class="screen">
