@@ -1,6 +1,6 @@
 body, html {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    font-family: -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: linear-gradient(135deg, #0a3161 0%, #174ea6 100%);
     color: #ffffff; overflow-x: hidden;
 }
@@ -8,52 +8,66 @@ body, html {
 .screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; text-align: center; }
 .screen.active { display: flex; }
 
-.stars { font-size: 28px; letter-spacing: 12px; margin-bottom: 10px; opacity: 0.8; }
-.title { font-size: clamp(32px, 8vw, 64px); font-weight: bold; margin-bottom: 20px; }
+.stars { color: #ffffff; font-size: 28px; letter-spacing: 12px; margin-bottom: 10px; }
+.title { font-size: clamp(32px, 8vw, 60px); font-weight: bold; margin-bottom: 20px; }
 .status-text { color: #fdf6e3; font-size: 18px; font-weight: bold; margin-top: 15px; }
-.question-text { font-size: 28px; margin-bottom: 25px; line-height: 1.2; font-weight: 600; width: 90%; }
+.progress-text { font-size: 20px; color: #e8f0fe; margin-bottom: 10px; }
+.question-text { font-size: 28px; margin-bottom: 25px; line-height: 1.3; font-weight: 600; max-width: 600px; }
+.score-text { font-size: 40px; margin-bottom: 30px; color: #ffb703; font-weight: bold; }
 
 /* MASTERY RING */
 .mastery-container { margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; }
 .circular-progress {
-    width: 140px; height: 140px; border-radius: 50%;
+    width: 150px; height: 150px; border-radius: 50%;
     background: conic-gradient(rgba(255,255,255,0.1) 0deg, rgba(255,255,255,0.1) 360deg);
     display: flex; align-items: center; justify-content: center; position: relative;
     box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 .circular-progress::before {
-    content: ""; position: absolute; width: 110px; height: 110px; border-radius: 50%; background-color: #0a3161;
+    content: ""; position: absolute; width: 120px; height: 120px; border-radius: 50%; background-color: #0a3161;
 }
-.circular-progress-value { position: relative; font-size: 34px; font-weight: bold; color: #ffb703; }
+.circular-progress-value { position: relative; font-size: 38px; font-weight: bold; color: #ffb703; }
 
 /* BUTTONS */
 .button-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; align-items: center; }
 button {
     background-color: #fdf6e3; color: #0a3161; font-size: 20px; font-weight: bold; padding: 16px; border: none; border-radius: 12px; cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2); width: 100%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2); width: 100%; transition: 0.2s;
 }
+button:hover:not(:disabled) { transform: translateY(-2px); background-color: #ffffff; }
 .btn-hard { background-color: #174ea6; color: white; border: 2px solid white; }
-.btn-secondary { background-color: transparent; color: white; border: 2px solid white; margin-top: 10px; }
+.btn-secondary { background-color: transparent; color: white; border: 2px solid white; margin-top: 15px; max-width: 320px; }
 .btn-danger { background-color: #ce1126; color: white; }
 
-.nav-row { display: flex; gap: 8px; width: 100%; max-width: 400px; margin-top: 15px; }
+.nav-row { display: flex; gap: 8px; width: 100%; max-width: 500px; margin-top: 20px; }
 .nav-row button { flex: 1; font-size: 14px; padding: 12px 5px; }
 
-/* HARD QUIZ */
-.voice-container { width: 100%; display: flex; flex-direction: column; align-items: center; }
-.hard-input { width: 85%; max-width: 280px; font-size: 18px; padding: 12px; border-radius: 8px; border: none; text-align: center; margin: 10px 0; outline: none; }
-.mic-button { background-color: #ce1126; color: white; border-radius: 50px; padding: 15px 25px; font-size: 18px; width: auto; transition: 0.3s; }
-.mic-button.recording { background-color: #28a745; transform: scale(1.05); }
-.mic-status { font-size: 14px; color: #ffffff; height: 16px; margin-top: 4px; font-weight: bold; }
-.feedback-text { font-size: 20px; font-weight: bold; margin-top: 10px; min-height: 24px; }
-
-/* QUIZ */
-.options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; }
+/* STUDY & QUIZ LISTS */
+.answer-list { list-style: none; padding: 0; width: 100%; max-width: 600px; }
+.answer-list li { background-color: #ffffff; border-left: 8px solid #ce1126; padding: 18px; margin-bottom: 10px; border-radius: 0 8px 8px 0; font-size: 22px; color: #0a3161; text-align: left; }
+.options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 500px; margin-bottom: 20px; }
 .answer-card { background-color: #ffffff; color: #0a3161; font-weight: 600; font-size: 18px; padding: 15px; border-radius: 8px; cursor: pointer; }
 .answer-card.correct { background-color: #28a745 !important; color: white; }
 .answer-card.incorrect { background-color: #ce1126 !important; color: white; }
 
-.progress-bar-container { width: 100%; max-width: 400px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin-bottom: 15px; }
+/* FLASHCARDS */
+.flip-card { width: 100%; max-width: 500px; height: 300px; perspective: 1000px; cursor: pointer; margin-bottom: 20px; }
+.flip-card-inner { position: relative; width: 100%; height: 100%; transition: 0.6s; transform-style: preserve-3d; }
+.flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+.flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 16px; padding: 25px; box-sizing: border-box; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+.flip-card-front { background-color: #e8f0fe; color: #0a3161; border: 4px solid #0a3161; }
+.flip-card-back { background-color: #ffffff; color: #0a3161; border: 4px solid #ce1126; transform: rotateY(180deg); }
+.card-label { position: absolute; top: 15px; left: 20px; font-size: 24px; opacity: 0.3; }
+
+/* HARD QUIZ INPUTS */
+.hard-input { width: 85%; max-width: 280px; font-size: 18px; padding: 12px; border-radius: 8px; border: none; text-align: center; margin: 10px 0; outline: none; }
+.mic-button { background-color: #ce1126; color: white; border-radius: 50px; padding: 15px 25px; font-size: 18px; width: auto; transition: 0.3s; }
+.mic-button.recording { background-color: #28a745; }
+.mic-status { font-size: 14px; color: #ffffff; height: 16px; margin-top: 5px; font-weight: bold; }
+.feedback-text { font-size: 20px; font-weight: bold; margin-top: 10px; min-height: 24px; }
+
+/* PROGRESS BAR */
+.progress-bar-container { width: 100%; max-width: 500px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin-bottom: 20px; }
 .progress-bar { height: 100%; background: #ffb703; border-radius: 4px; transition: 0.4s; }
 
 /* MODAL */
@@ -63,4 +77,5 @@ button {
 
 @media (max-width: 768px) {
     .screen { padding: 40px 15px; justify-content: flex-start; }
+    .title { font-size: 32px; }
 }
