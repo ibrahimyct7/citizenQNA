@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Civics Study App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="home-screen" class="screen active">
+        <h1 class="title">US Civics Study App</h1>
+        <div class="button-group">
+            <button onclick="startStudy()">Study Mode</button>
+            <button onclick="startQuiz()">Quiz Mode</button>
+        </div>
+    </div>
+
+    <div id="study-screen" class="screen">
+        <h2 id="study-progress" class="progress-text">Question 1 of 128</h2>
+        <h1 id="study-question" class="question-text">Question goes here?</h1>
+        <ul id="study-answers" class="answer-list">
+            </ul>
+        <div class="button-group">
+            <button onclick="goHome()">Home</button>
+            <button onclick="nextStudyQuestion()">Next</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <h2 id="quiz-progress-text" class="progress-text">Question 1 of 20</h2>
+        <div class="progress-bar-container">
+            <div id="quiz-progress-bar" class="progress-bar"></div>
+        </div>
+        <h1 id="quiz-question" class="question-text">Question goes here?</h1>
+        <div id="quiz-options" class="options-grid">
+            </div>
+        <div class="button-group">
+            <button onclick="endQuiz()" class="btn-secondary">End Quiz</button>
+            <button id="quiz-next-btn" onclick="nextQuizQuestion()" disabled>Next</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1 class="title">Quiz Complete</h1>
+        <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
+        <div class="button-group">
+            <button onclick="startQuiz()">Retake Quiz</button>
+            <button onclick="goHome()">Home</button>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
