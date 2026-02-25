@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>US Civics Study App</title>
     
     <link rel="manifest" href="manifest.json">
@@ -17,17 +17,18 @@
         <div class="stars">★ ★ ★</div>
         <h1 class="title">Dashboard</h1>
         
-        <div class="circular-progress" id="progress-circle">
-            <span id="mastery-percentage" class="circular-progress-value">0%</span>
+        <div class="mastery-container">
+            <div class="circular-progress" id="progress-circle">
+                <span id="mastery-percentage" class="circular-progress-value">0%</span>
+            </div>
+            <p id="resume-text" class="status-text">Take a quiz to see your mastery!</p>
         </div>
-        
-        <p id="resume-text" class="status-text">Take a quiz to see your mastery!</p>
 
         <div class="button-group home-buttons">
             <button onclick="startStudy()">Study Mode</button>
             <button onclick="startFlashcards()">Flashcards</button>
             <button onclick="startQuiz()">Standard Quiz</button>
-            <button onclick="startHardQuiz()" class="btn-hard">Hard Quiz (Voice)</button>
+            <button onclick="startHardQuiz()" class="btn-hard">Hard Quiz</button>
         </div>
     </div>
 
@@ -103,16 +104,16 @@
         <div class="stars center-stars">★ ★ ★</div>
         <h1 class="title">Quiz Complete</h1>
         <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
-        <button onclick="goHome()">Back to Home</button>
+        <button onclick="goHome()">Back to Home Dashboard</button>
     </div>
 
     <div id="confirmation-modal" class="modal">
         <div class="modal-content">
             <h2 class="question-text" style="color: #0a3161;">Are you sure?</h2>
-            <p class="progress-text" style="color: #333333;">Progress will be lost.</p>
+            <p class="progress-text" style="color: #333333;">Current progress will be lost.</p>
             <div class="button-group center-buttons">
-                <button onclick="cancelEndQuiz()">No</button>
-                <button onclick="confirmEndQuiz()" class="btn-danger">Yes, end</button>
+                <button onclick="cancelEndQuiz()">No, Stay</button>
+                <button onclick="confirmEndQuiz()" class="btn-danger">Yes, End</button>
             </div>
         </div>
     </div>
