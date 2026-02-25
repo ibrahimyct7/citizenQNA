@@ -8,7 +8,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ce1126">
     <link rel="apple-touch-icon" href="icon-192.png">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -33,7 +32,7 @@
     </div>
 
     <div id="study-screen" class="screen">
-        <div class="stars">★ ★ ★</div>
+        <div class="stars center-stars">★ ★ ★</div>
         <h2 id="study-progress" class="progress-text">Question 1 of 128</h2>
         <h1 id="study-question" class="question-text">Question?</h1>
         <ul id="study-answers" class="answer-list"></ul>
@@ -46,19 +45,17 @@
     </div>
 
     <div id="flashcard-screen" class="screen">
-        <div class="stars">★ ★ ★</div>
+        <div class="stars center-stars">★ ★ ★</div>
         <h2 id="flashcard-progress" class="progress-text">Question 1 of 128</h2>
         <div class="flip-card" onclick="toggleFlashcard()">
             <div id="flashcard-inner" class="flip-card-inner">
                 <div class="flip-card-front">
                     <span class="card-label">Q</span>
                     <p id="flashcard-question" class="flashcard-text">Question?</p>
-                    <span class="flashcard-hint">Tap to flip</span>
                 </div>
                 <div class="flip-card-back">
                     <span class="card-label">A</span>
                     <p id="flashcard-answer" class="flashcard-text">Answer!</p>
-                    <span class="flashcard-hint">Tap to flip back</span>
                 </div>
             </div>
         </div>
@@ -71,7 +68,7 @@
     </div>
 
     <div id="quiz-screen" class="screen">
-        <div class="stars">★ ★ ★</div>
+        <div class="stars center-stars">★ ★ ★</div>
         <h2 id="quiz-progress-text" class="progress-text">Question 1 of 20</h2>
         <div class="progress-bar-container"><div id="quiz-progress-bar" class="progress-bar"></div></div>
         <h1 id="quiz-question" class="question-text">Question?</h1>
@@ -83,16 +80,18 @@
     </div>
 
     <div id="hard-quiz-screen" class="screen">
-        <div class="stars">★ ★ ★</div>
+        <div class="stars center-stars">★ ★ ★</div>
         <h2 id="hard-quiz-progress-text" class="progress-text">Question 1 of 20</h2>
         <div class="progress-bar-container"><div id="hard-quiz-progress-bar" class="progress-bar"></div></div>
         <h1 id="hard-quiz-question" class="question-text">Question?</h1>
+        
         <div class="voice-container">
             <button id="mic-btn" class="mic-button" onclick="toggleMicrophone()">🎤 Tap to Speak</button>
             <p id="mic-status" class="mic-status"></p>
             <input type="text" id="hard-quiz-input" class="hard-input" placeholder="Type or say your answer" />
             <p id="hard-quiz-feedback" class="feedback-text"></p>
         </div>
+
         <div class="button-group">
             <button id="hard-quiz-check-btn" onclick="checkHardAnswer()">Check Answer</button>
             <button id="hard-quiz-next-btn" onclick="nextHardQuizQuestion()" style="display:none;">Next</button>
@@ -101,16 +100,16 @@
     </div>
 
     <div id="result-screen" class="screen">
-        <div class="stars">★ ★ ★</div>
+        <div class="stars center-stars">★ ★ ★</div>
         <h1 class="title">Quiz Complete</h1>
         <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
-        <button onclick="goHome()" style="max-width:300px;">Back to Home</button>
+        <button onclick="goHome()" style="max-width:300px;">Back to Home Dashboard</button>
     </div>
 
     <div id="confirmation-modal" class="modal">
         <div class="modal-content">
             <h2 style="color: #0a3161; margin:0;">Are you sure?</h2>
-            <p style="color: #333333; margin: 15px 0;">Progress will be lost.</p>
+            <p style="color: #333333; margin: 15px 0;">Current progress will be lost.</p>
             <button onclick="cancelEndQuiz()">No</button>
             <button onclick="confirmEndQuiz()" class="btn-danger" style="margin-top:10px;">Yes, End</button>
         </div>
