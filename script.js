@@ -39,34 +39,53 @@ function speakQuestion(text) {
 }
 
 function cleanText(t) { return t.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
-function norm(t) { return cleanText(t).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, "").trim(); }
 
-// --- TIGHTENED FORGIVING ENGINE (STRICT BUT FAIR) ---
+// AGGRESSIVE NORMALIZATION: Removes middle initials, dashes, dots, commas, etc.
+function norm(t) { 
+    return cleanText(t).toLowerCase()
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, " ") // Replace punctuation with space
+    .replace(/\s+/g, " ") // Collapse extra spaces
+    .trim(); 
+}
+
+// MATH LOGIC: Calculates how many letters are different (Levenshtein Distance)
+function getLevenshteinDistance(a, b) {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
+            else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+// --- NEW SUPER FUZZY ENGINE ---
 function isMatch(inp, ansList) {
-    const cleanInp = " " + norm(inp) + " ";
+    const userClean = norm(inp);
     const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
-    const variations = { "writer": "wrote", "writing": "wrote", "written": "wrote", "wrote": "wrote" };
 
     for (let a of ansList) {
-        const cleanA = norm(a);
-        const aWords = cleanA.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
+        const officialClean = norm(a);
         
-        // Single word answers must match perfectly (ignoring casing)
-        if (aWords.length === 0) {
-            if (cleanInp.trim() === cleanA) return true;
-            continue;
-        }
+        // 1. Check if user said the core answer (handles Donald Trump vs Donald J Trump)
+        if (userClean.includes(officialClean) || officialClean.includes(userClean)) return true;
+
+        // 2. Check word by word for 2-letter typos
+        const aWords = officialClean.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
+        const uWords = userClean.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
 
         let matchCount = 0;
-        aWords.forEach(word => {
-            const check = variations[word] || word;
-            if (cleanInp.includes(" " + check + " ") || cleanInp.includes(" " + word + " ")) {
+        aWords.forEach(aw => {
+            if (uWords.some(uw => getLevenshteinDistance(aw, uw) <= 2)) {
                 matchCount++;
             }
         });
 
-        // STRICTOR THRESHOLD: Must get 75% of core keywords right
-        if (matchCount / aWords.length >= 0.75) return true;
+        // If you hit most core words (even with typos), you pass!
+        if (aWords.length > 0 && (matchCount / aWords.length >= 0.7)) return true;
     }
     return false;
 }
@@ -149,7 +168,7 @@ function checkHardAnswer() {
         document.getElementById('hard-quiz-feedback').innerText = "✅ Correct!"; 
         document.getElementById('hard-quiz-feedback').style.color = "#28a745"; 
     } else { 
-        document.getElementById('hard-quiz-feedback').innerText = "❌ Incorrect. Answer: " + cleanText(q.answers[0]); 
+        document.getElementById('hard-quiz-feedback').innerText = "❌ No. Answer: " + cleanText(q.answers[0]); 
         document.getElementById('hard-quiz-feedback').style.color = "#ff4d4d"; 
     }
     document.getElementById('hard-quiz-check-btn').style.display = 'none';
