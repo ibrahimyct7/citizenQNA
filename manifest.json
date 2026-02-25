@@ -1,0 +1,22 @@
+{
+  "name": "US Civics Study App",
+  "short_name": "US Civics",
+  "description": "Master the USCIS Civics Test with Flashcards, Quizzes, and Voice AI.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a3161",
+  "theme_color": "#ce1126",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
