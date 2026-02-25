@@ -6,9 +6,12 @@ let currentQuizIndex = 0;
 let score = 0;
 let isHardQuiz = false;
 
-// --- AUDIO (Subtle Click & AI Voice) ---
+// --- AUDIO (Subtle Click & Better AI Voice) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const synth = window.speechSynthesis;
+
+// Force voices to load on some browsers
+synth.getVoices();
 
 function playClickSound() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -25,12 +28,24 @@ function playClickSound() {
     oscillator.stop(audioCtx.currentTime + 0.05);
 }
 
-// Speak the question text
+// Speaks the question (FASTER, BETTER VOICE, AND FIXES THE FIRST QUESTION BUG)
 function speakQuestion(text) {
     synth.cancel(); // Stop any current speech
-    const utterThis = new SpeechSynthesisUtterance(text);
-    utterThis.rate = 1.0; // Normal speed
-    synth.speak(utterThis);
+    
+    // The slight 100ms delay ensures the browser registers the user click first, allowing the audio to play!
+    setTimeout(() => {
+        const utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.rate = 1.15; // A tiny bit faster
+        
+        // Find a higher quality voice if available (Google or Samantha usually sound best)
+        const voices = synth.getVoices();
+        const betterVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || (v.lang === 'en-US' && v.name.includes('Female')));
+        if (betterVoice) {
+            utterThis.voice = betterVoice;
+        }
+        
+        synth.speak(utterThis);
+    }, 100); 
 }
 
 document.addEventListener('click', function(e) {
@@ -99,6 +114,34 @@ function normalizeForComparison(text) {
     return cleanText(text).toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
 }
 
+// --- FORGIVING ANSWER CHECKER ---
+// This ignores filler words so you don't get marked wrong for missing "it" or "the"
+function isForgivingMatch(userInput, officialAnswers) {
+    const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by'];
+    
+    const cleanInput = normalizeForComparison(userInput);
+    const inputWords = cleanInput.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
+
+    for (let ans of officialAnswers) {
+        const cleanAns = normalizeForComparison(ans);
+        const ansWords = cleanAns.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
+        
+        let matchCount = 0;
+        for (let w of ansWords) {
+            if (cleanInput.includes(w)) matchCount++;
+        }
+        
+        // If it's a short answer (1-2 important words), require all key words.
+        // If it's a long sentence, require only 50% of the key words!
+        if (ansWords.length <= 2) {
+            if (matchCount === ansWords.length) return true;
+        } else {
+            if (matchCount / ansWords.length >= 0.5) return true;
+        }
+    }
+    return false;
+}
+
 // --- NAVIGATION ---
 function showScreen(screenId) {
     synth.cancel(); // Stop talking when leaving a screen
@@ -108,7 +151,7 @@ function showScreen(screenId) {
 }
 function goHome() { showScreen('home-screen'); }
 
-// --- STUDY MODE & FLASHCARDS (Logic is same as before) ---
+// --- STUDY MODE & FLASHCARDS ---
 function startStudy() { currentStudyIndex = 0; renderStudyQuestion(); showScreen('study-screen'); }
 function renderStudyQuestion() {
     const q = civicsData[currentStudyIndex];
@@ -151,11 +194,7 @@ function renderQuizQuestion() {
     
     speakQuestion(cleanQ); // AI reads question
     
-    // Pick correct answer
     const correctAnswer = cleanText(q.answers[0]); 
-    
-    // Pick hardcoded wrong answers (User provided logic)
-    // We shuffle the hardcoded wrong answers and take 3
     let wrongAnswersPool = shuffleArray([...q.wrong]); 
     const selectedWrongAnswers = wrongAnswersPool.slice(0, 3).map(ans => cleanText(ans));
     
@@ -231,27 +270,18 @@ function renderHardQuizQuestion() {
 }
 
 function checkHardAnswer() {
-    const userInput = normalizeForComparison(document.getElementById('hard-quiz-input').value);
+    const userInput = document.getElementById('hard-quiz-input').value;
     const q = quizQuestions[currentQuizIndex];
     const feedback = document.getElementById('hard-quiz-feedback');
     
-    if (!userInput) {
+    if (!userInput.trim()) {
         feedback.innerText = "Please speak or type an answer first!";
         feedback.className = "feedback-text feedback-incorrect";
         return;
     }
 
-    let isCorrect = false;
-    
-    // Smart verification: Does their input contain a keyword from ANY valid answer?
-    for (let ans of q.answers) {
-        const validAns = normalizeForComparison(ans);
-        // If what they typed includes the valid answer, OR the valid answer includes what they typed (if it's long enough)
-        if (userInput.includes(validAns) || (validAns.includes(userInput) && userInput.length > 3)) {
-            isCorrect = true;
-            break;
-        }
-    }
+    // Pass it to the smart forgiving algorithm
+    const isCorrect = isForgivingMatch(userInput, q.answers);
 
     if (isCorrect) {
         score++;
