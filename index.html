@@ -14,7 +14,8 @@
         <div class="button-group home-buttons">
             <button onclick="startStudy()">Study Mode</button>
             <button onclick="startFlashcards()">Flashcards</button>
-            <button onclick="startQuiz()">Quiz Mode</button>
+            <button onclick="startQuiz()">Standard Quiz</button>
+            <button onclick="startHardQuiz()" class="btn-hard">Hard Quiz (Voice)</button>
         </div>
     </div>
 
@@ -39,10 +40,12 @@
         <div class="flip-card" onclick="toggleFlashcard()">
             <div id="flashcard-inner" class="flip-card-inner">
                 <div class="flip-card-front">
+                    <span class="card-label">Q</span>
                     <p id="flashcard-question" class="flashcard-text">Question?</p>
                     <span class="flashcard-hint">Tap to flip</span>
                 </div>
                 <div class="flip-card-back">
+                    <span class="card-label">A</span>
                     <p id="flashcard-answer" class="flashcard-text">Answer!</p>
                     <span class="flashcard-hint">Tap to flip back</span>
                 </div>
@@ -72,12 +75,33 @@
         </div>
     </div>
 
+    <div id="hard-quiz-screen" class="screen center-content">
+        <div class="stars center-stars">★ ★ ★</div>
+        <h2 id="hard-quiz-progress-text" class="progress-text">Question 1 of 20</h2>
+        <div class="progress-bar-container" style="max-width: 600px; width: 100%;">
+            <div id="hard-quiz-progress-bar" class="progress-bar"></div>
+        </div>
+        <h1 id="hard-quiz-question" class="question-text" style="text-align: center;">Question goes here?</h1>
+        
+        <div class="voice-container">
+            <button id="mic-btn" class="mic-button" onclick="toggleMicrophone()">🎤 Tap to Speak</button>
+            <p id="mic-status" class="mic-status">Ready...</p>
+            <input type="text" id="hard-quiz-input" class="hard-input" placeholder="Say your answer or type here..." />
+            <p id="hard-quiz-feedback" class="feedback-text"></p>
+        </div>
+
+        <div class="button-group center-buttons" style="margin-top: 20px;">
+            <button id="hard-quiz-check-btn" onclick="checkHardAnswer()">Check Answer</button>
+            <button id="hard-quiz-next-btn" onclick="nextHardQuizQuestion()" style="display:none;">Next</button>
+            <button onclick="promptEndQuiz()" class="btn-secondary">End Quiz</button>
+        </div>
+    </div>
+
     <div id="result-screen" class="screen center-content">
         <div class="stars center-stars">★ ★ ★</div>
         <h1 class="title">Quiz Complete</h1>
         <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
-        <div class="button-group">
-            <button onclick="startQuiz()">Retake Quiz</button>
+        <div class="button-group center-buttons">
             <button onclick="goHome()">Home</button>
         </div>
     </div>
