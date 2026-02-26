@@ -14,45 +14,48 @@
     <div id="home-screen" class="screen active">
         <div class="stars">★ ★ ★</div>
         <h1 class="title">Dashboard</h1>
+        
         <div class="mastery-container">
             <div class="circular-progress" id="progress-circle">
                 <span id="mastery-percentage" class="circular-progress-value">0%</span>
             </div>
             <p id="resume-text" class="status-text">Take a quiz to see your mastery!</p>
         </div>
+
         <div class="button-group">
             <button onclick="startStudy()">Study Mode</button>
             <button onclick="startFlashcards()">Flashcards</button>
             <button onclick="startQuiz()">Standard Quiz</button>
             <button onclick="startHardQuiz()" class="btn-hard">Hard Quiz</button>
+            <button onclick="startWritingTest()" class="btn-writing">Writing Test</button>
         </div>
     </div>
 
     <div id="study-screen" class="screen">
-        <div class="stars center-stars">★ ★ ★</div>
-        <h2 id="study-progress" class="progress-text">Question 1 of 128</h2>
-        <h1 id="study-question" class="question-text">Question?</h1>
+        <div class="stars">★ ★ ★</div>
+        <h2 id="study-progress" class="progress-text"></h2>
+        <h1 id="study-question" class="question-text"></h1>
         <ul id="study-answers" class="answer-list"></ul>
         <div class="nav-row">
             <button onclick="backTenStudyQuestions()">&laquo; Back 10</button>
             <button onclick="nextStudyQuestion()">Next</button>
             <button onclick="skipTenStudyQuestions()">Skip 10 &raquo;</button>
         </div>
-        <button onclick="goHome()" class="btn-secondary">Home</button>
+        <button onclick="goHome()" class="btn-secondary">Home Dashboard</button>
     </div>
 
     <div id="flashcard-screen" class="screen">
-        <div class="stars center-stars">★ ★ ★</div>
-        <h2 id="flashcard-progress" class="progress-text">Question 1 of 128</h2>
+        <div class="stars">★ ★ ★</div>
+        <h2 id="flashcard-progress" class="progress-text"></h2>
         <div class="flip-card" onclick="toggleFlashcard()">
             <div id="flashcard-inner" class="flip-card-inner">
                 <div class="flip-card-front">
                     <span class="card-label">Q</span>
-                    <p id="flashcard-question" class="flashcard-text">Question?</p>
+                    <p id="flashcard-question" class="flashcard-text"></p>
                 </div>
                 <div class="flip-card-back">
                     <span class="card-label">A</span>
-                    <p id="flashcard-answer" class="flashcard-text">Answer!</p>
+                    <p id="flashcard-answer" class="flashcard-text"></p>
                 </div>
             </div>
         </div>
@@ -61,14 +64,14 @@
             <button onclick="nextFlashcard()">Next</button>
             <button onclick="skipTenFlashcards()">Skip 10 &raquo;</button>
         </div>
-        <button onclick="goHome()" class="btn-secondary">Home</button>
+        <button onclick="goHome()" class="btn-secondary">Home Dashboard</button>
     </div>
 
     <div id="quiz-screen" class="screen">
-        <div class="stars center-stars">★ ★ ★</div>
-        <h2 id="quiz-progress-text" class="progress-text">Question 1 of 20</h2>
+        <div class="stars">★ ★ ★</div>
+        <h2 id="quiz-progress-text" class="progress-text"></h2>
         <div class="progress-bar-container"><div id="quiz-progress-bar" class="progress-bar"></div></div>
-        <h1 id="quiz-question" class="question-text">Question?</h1>
+        <h1 id="quiz-question" class="question-text"></h1>
         <div id="quiz-options" class="options-grid"></div>
         <div class="button-group">
             <button id="quiz-next-btn" onclick="nextQuizQuestion()" disabled>Next</button>
@@ -77,10 +80,10 @@
     </div>
 
     <div id="hard-quiz-screen" class="screen">
-        <div class="stars center-stars">★ ★ ★</div>
-        <h2 id="hard-quiz-progress-text" class="progress-text">Question 1 of 20</h2>
+        <div class="stars">★ ★ ★</div>
+        <h2 id="hard-quiz-progress-text" class="progress-text"></h2>
         <div class="progress-bar-container"><div id="hard-quiz-progress-bar" class="progress-bar"></div></div>
-        <h1 id="hard-quiz-question" class="question-text">Question?</h1>
+        <h1 id="hard-quiz-question" class="question-text"></h1>
         <div class="voice-container">
             <button id="mic-btn" class="mic-button" onclick="toggleMicrophone()">🎤 Tap to Speak</button>
             <p id="mic-status" class="mic-status"></p>
@@ -94,18 +97,37 @@
         </div>
     </div>
 
+    <div id="writing-screen" class="screen">
+        <div class="stars">★ ★ ★</div>
+        <h2 id="writing-progress-text" class="progress-text">Sentence 1 of 5</h2>
+        <div class="progress-bar-container"><div id="writing-progress-bar" class="progress-bar"></div></div>
+        <div class="voice-container">
+            <button onclick="repeatWritingSentence()" class="mic-button" style="background-color: #174ea6;">🔊 Listen Again</button>
+            <p class="status-text" style="font-size: 16px; margin-bottom: 20px;">Write what you hear below:</p>
+            <input type="text" id="writing-input" class="hard-input" placeholder="Start writing here..." autofocus />
+            <p id="writing-feedback" class="feedback-text"></p>
+        </div>
+        <div class="button-group">
+            <button id="writing-check-btn" onclick="checkWritingAnswer()">Check Sentence</button>
+            <button id="writing-next-btn" onclick="nextWritingQuestion()" style="display:none;">Next</button>
+            <button onclick="promptEndQuiz()" class="btn-secondary">End Test</button>
+        </div>
+    </div>
+
     <div id="result-screen" class="screen">
-        <div class="stars center-stars">★ ★ ★</div>
-        <h1 class="title">Quiz Complete</h1>
-        <h2 id="final-score" class="score-text">Your Score: 0 / 20</h2>
-        <button onclick="goHome()" style="max-width:320px;">Back to Home Dashboard</button>
+        <div class="stars">★ ★ ★</div>
+        <h1 class="title">Complete!</h1>
+        <h2 id="final-score" class="score-text"></h2>
+        <button onclick="goHome()" style="max-width:300px;">Back to Dashboard</button>
     </div>
 
     <div id="confirmation-modal" class="modal">
         <div class="modal-content">
             <h2 style="color: #0a3161; margin:0;">Are you sure?</h2>
-            <button onclick="cancelEndQuiz()" style="margin-top:20px;">No</button>
-            <button onclick="confirmEndQuiz()" class="btn-danger" style="margin-top:10px;">Yes, End</button>
+            <div class="button-group" style="margin-top:20px;">
+                <button onclick="cancelEndQuiz()">No</button>
+                <button onclick="confirmEndQuiz()" class="btn-danger">Yes, End</button>
+            </div>
         </div>
     </div>
 
