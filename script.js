@@ -1,4 +1,5 @@
 let currentStudyIndex = 0, currentFlashcardIndex = 0, quizQuestions = [], currentQuizIndex = 0, score = 0;
+let writingSentences = [], currentWritingIndex = 0;
 const synth = window.speechSynthesis;
 let voices = [];
 
@@ -7,6 +8,25 @@ populateVoices();
 if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
 
 window.onload = () => { loadUserData(); };
+
+// --- OFFICIAL WRITING SENTENCES (Using provided Vocabulary) ---
+const officialWritingSentences = [
+    "George Washington was the President.",
+    "Abraham Lincoln was the President during the Civil War.",
+    "Washington D.C. is the capital.",
+    "Congress meets in Washington.",
+    "Citizens have the right to vote.",
+    "The White House is in Washington D.C.",
+    "The United States has states.",
+    "People come to America to be free.",
+    "Washington was the Father of Our Country.",
+    "Citizens vote for the President.",
+    "Canada is north of the United States.",
+    "Mexico is south of the United States.",
+    "The House of Representatives meets in Washington.",
+    "We have freedom of speech.",
+    "George Washington is the Father of Our Country."
+];
 
 function loadUserData() {
     currentStudyIndex = parseInt(localStorage.getItem(`civ_studyIndex`)) || 0;
@@ -31,7 +51,7 @@ function speakQuestion(text) {
     synth.cancel();
     setTimeout(() => {
         const u = new SpeechSynthesisUtterance(text);
-        u.rate = 1.08;
+        u.rate = 1.06; // Updated speed as requested
         const v = synth.getVoices();
         u.voice = v.find(n => n.name.includes('Google') || n.name.includes('Samantha') || n.name.includes('Enhanced')) || v[0];
         synth.speak(u);
@@ -40,64 +60,52 @@ function speakQuestion(text) {
 
 function cleanText(t) { return t.replace(/\s*\(.*?\)\s*/g, ' ').trim(); }
 
-// AGGRESSIVE NORMALIZATION: Removes middle initials, dashes, dots, commas, etc.
+// Super cleaner: Removes everything except core letters and numbers
 function norm(t) { 
     return cleanText(t).toLowerCase()
-    .replace(/[.,/#!$%^&*;:{}=\-_`~()""'“”’‘]/g, " ") // Replace punctuation with space
-    .replace(/\s+/g, " ") // Collapse extra spaces
-    .trim(); 
+        .replace(/[^a-z0-9 ]/g, "")
+        .replace(/\s+/g, " ")
+        .trim(); 
 }
 
-// MATH LOGIC: Calculates how many letters are different (Levenshtein Distance)
-function getLevenshteinDistance(a, b) {
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
-            else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
-        }
-    }
-    return matrix[b.length][a.length];
-}
-
-// --- NEW SUPER FUZZY ENGINE ---
+// --- FUZZY MATCH LOGIC ---
 function isMatch(inp, ansList) {
-    const userClean = norm(inp);
+    const userStr = norm(inp);
     const stopWords = ['the', 'a', 'an', 'it', 'is', 'are', 'was', 'were', 'to', 'of', 'for', 'in', 'on', 'that', 'says', 'from', 'because', 'they', 'have', 'and', 'by', 'our'];
+    const stems = { "writer": "wrote", "writing": "wrote", "written": "wrote", "wrote": "wrote" };
 
     for (let a of ansList) {
-        const officialClean = norm(a);
-        
-        // 1. Check if user said the core answer (handles Donald Trump vs Donald J Trump)
-        if (userClean.includes(officialClean) || officialClean.includes(userClean)) return true;
+        const officialStr = norm(a);
+        if (userStr === officialStr) return true;
 
-        // 2. Check word by word for 2-letter typos
-        const aWords = officialClean.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
-        const uWords = userClean.split(' ').filter(w => !stopWords.includes(w) && w.length > 2);
+        // Extract core words (longer than 1 char, not stop words)
+        const aWords = officialStr.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
+        const uWords = userStr.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
+
+        if (aWords.length === 0) return userStr === officialStr;
 
         let matchCount = 0;
         aWords.forEach(aw => {
-            if (uWords.some(uw => getLevenshteinDistance(aw, uw) <= 2)) {
-                matchCount++;
-            }
+            const stem = stems[aw] || aw;
+            // Check if user has the word or a very close version
+            if (uWords.some(uw => (stems[uw] || uw) === stem || uw.includes(aw) || aw.includes(uw))) matchCount++;
         });
 
-        // If you hit most core words (even with typos), you pass!
-        if (aWords.length > 0 && (matchCount / aWords.length >= 0.7)) return true;
+        if (matchCount / aWords.length >= 0.75) return true;
     }
     return false;
 }
 
+// --- NAVIGATION ---
 function showScreen(id) {
     synth.cancel();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
 }
-
 function goHome() { showScreen('home-screen'); loadUserData(); }
+
+// --- STUDY MODE ---
 function startStudy() { renderStudy(); showScreen('study-screen'); }
 function renderStudy() {
     const q = civicsData[currentStudyIndex];
@@ -110,6 +118,7 @@ function nextStudyQuestion() { currentStudyIndex = (currentStudyIndex + 1) % 128
 function skipTenStudyQuestions() { currentStudyIndex = Math.min(currentStudyIndex + 10, 127); renderStudy(); }
 function backTenStudyQuestions() { currentStudyIndex = Math.max(currentStudyIndex - 10, 0); renderStudy(); }
 
+// --- FLASHCARDS ---
 function startFlashcards() { renderFlash(); showScreen('flashcard-screen'); }
 function renderFlash() {
     document.querySelector('.flip-card').classList.remove('flipped');
@@ -124,6 +133,7 @@ function nextFlashcard() { currentFlashcardIndex = (currentFlashcardIndex + 1) %
 function skipTenFlashcards() { currentFlashcardIndex = Math.min(currentFlashcardIndex + 10, 127); renderFlash(); }
 function backTenFlashcards() { currentFlashcardIndex = Math.max(currentFlashcardIndex - 10, 0); renderFlash(); }
 
+// --- STANDARD QUIZ ---
 function startQuiz() { quizQuestions = [...civicsData].sort(() => 0.5 - Math.random()).slice(0, 20); currentQuizIndex = 0; score = 0; renderQuiz(); showScreen('quiz-screen'); }
 function renderQuiz() {
     const q = quizQuestions[currentQuizIndex];
@@ -145,12 +155,13 @@ function renderQuiz() {
     document.getElementById('quiz-next-btn').disabled = true;
     document.getElementById('quiz-next-btn').innerText = currentQuizIndex === 19 ? "Finish" : "Next";
 }
-function nextQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderQuiz(); else finishQuiz(); }
+function nextQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderQuiz(); else finishTest("Quiz"); }
 
+// --- HARD QUIZ ---
 function startHardQuiz() { quizQuestions = [...civicsData].sort(() => 0.5 - Math.random()).slice(0, 20); currentQuizIndex = 0; score = 0; renderHard(); showScreen('hard-quiz-screen'); }
 function renderHard() {
     const q = quizQuestions[currentQuizIndex];
-    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex+1} of 20`;
+    document.getElementById('hard-quiz-progress-text').innerText = `Question ${currentQuizIndex + 1} of 20`;
     document.getElementById('hard-quiz-progress-bar').style.width = (currentQuizIndex / 20 * 100) + "%";
     document.getElementById('hard-quiz-question').innerText = cleanText(q.question);
     speakQuestion(cleanText(q.question));
@@ -164,20 +175,40 @@ function checkHardAnswer() {
     const inp = document.getElementById('hard-quiz-input').value;
     const q = quizQuestions[currentQuizIndex];
     if (isMatch(inp, q.answers)) { 
-        score++; 
-        document.getElementById('hard-quiz-feedback').innerText = "✅ Correct!"; 
-        document.getElementById('hard-quiz-feedback').style.color = "#28a745"; 
+        score++; document.getElementById('hard-quiz-feedback').innerText = "✅ Correct!"; document.getElementById('hard-quiz-feedback').style.color = "#28a745"; 
     } else { 
-        document.getElementById('hard-quiz-feedback').innerText = "❌ No. Answer: " + cleanText(q.answers[0]); 
-        document.getElementById('hard-quiz-feedback').style.color = "#ff4d4d"; 
+        document.getElementById('hard-quiz-feedback').innerText = "❌ Incorrect. Correct: " + cleanText(q.answers[0]); document.getElementById('hard-quiz-feedback').style.color = "#ff4d4d"; 
     }
     document.getElementById('hard-quiz-check-btn').style.display = 'none';
     document.getElementById('hard-quiz-next-btn').style.display = 'block';
     document.getElementById('hard-quiz-next-btn').innerText = currentQuizIndex === 19 ? "Finish" : "Next";
 }
-function nextHardQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderHard(); else finishQuiz(); }
+function nextHardQuizQuestion() { currentQuizIndex++; if (currentQuizIndex < 20) renderHard(); else finishTest("Hard Quiz"); }
 
-function finishQuiz() { updateMastery(20, score); document.getElementById('final-score').innerText = `Score: ${score} / 20`; showScreen('result-screen'); }
+// --- WRITING TEST ---
+function startWritingTest() { writingSentences = [...officialWritingSentences].sort(() => 0.5 - Math.random()).slice(0, 5); currentWritingIndex = 0; score = 0; showScreen('writing-screen'); renderWriting(); }
+function renderWriting() {
+    document.getElementById('writing-progress-text').innerText = `Sentence ${currentWritingIndex + 1} of 5`;
+    document.getElementById('writing-progress-bar').style.width = (currentWritingIndex / 5 * 100) + "%";
+    document.getElementById('writing-input').value = '';
+    document.getElementById('writing-feedback').innerText = '';
+    document.getElementById('writing-check-btn').style.display = 'block';
+    document.getElementById('writing-next-btn').style.display = 'none';
+    speakQuestion(writingSentences[currentWritingIndex]);
+}
+function repeatWritingSentence() { speakQuestion(writingSentences[currentWritingIndex]); }
+function checkWritingAnswer() {
+    const inp = norm(document.getElementById('writing-input').value);
+    const correct = norm(writingSentences[currentWritingIndex]);
+    if (inp === correct) { score++; document.getElementById('writing-feedback').innerText = "✅ Perfect!"; document.getElementById('writing-feedback').style.color = "#28a745"; }
+    else { document.getElementById('writing-feedback').innerText = "❌ Spelling mismatch."; document.getElementById('writing-feedback').style.color = "#ff4d4d"; }
+    document.getElementById('writing-check-btn').style.display = 'none';
+    document.getElementById('writing-next-btn').style.display = 'block';
+    document.getElementById('writing-next-btn').innerText = currentWritingIndex === 4 ? "Finish" : "Next";
+}
+function nextWritingQuestion() { currentWritingIndex++; if (currentWritingIndex < 5) renderWriting(); else finishTest("Writing Test"); }
+
+function finishTest(type) { if (type !== "Writing Test") updateMastery(20, score); document.getElementById('final-score').innerText = `${type} Score: ${score} / ${(type === "Writing Test" ? 5 : 20)}`; showScreen('result-screen'); }
 function promptEndQuiz() { document.getElementById('confirmation-modal').classList.add('active'); }
 function cancelEndQuiz() { document.getElementById('confirmation-modal').classList.remove('active'); }
 function confirmEndQuiz() { cancelEndQuiz(); goHome(); }
@@ -186,14 +217,8 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 let rec;
 if (SpeechRecognition) {
     rec = new SpeechRecognition();
-    rec.onstart = () => { 
-        document.getElementById('mic-btn').classList.add('recording'); 
-        document.getElementById('mic-status').innerText = "Speak Now";
-    };
+    rec.onstart = () => { document.getElementById('mic-btn').classList.add('recording'); document.getElementById('mic-status').innerText = "Speak Now"; };
     rec.onresult = (e) => { document.getElementById('hard-quiz-input').value = e.results[0][0].transcript; };
-    rec.onend = () => { 
-        document.getElementById('mic-btn').classList.remove('recording'); 
-        document.getElementById('mic-status').innerText = "";
-    };
+    rec.onend = () => { document.getElementById('mic-btn').classList.remove('recording'); document.getElementById('mic-status').innerText = ""; };
 }
 function toggleMicrophone() { try { rec.start(); } catch(e) { rec.stop(); } }
